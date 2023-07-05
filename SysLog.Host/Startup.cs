@@ -59,12 +59,24 @@ namespace SysLog.Host
 
             var corsConfig = new CorsConfig();
             Configuration.GetSection(CORS).Bind(corsConfig);
-            services.AddCors(option => option.AddPolicy(CORS, policy => policy
-                .WithOrigins(corsConfig.Origins)
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials()
-            ));
+            if (corsConfig.Origins.Contains("*") || !corsConfig.Origins.Any())
+            {
+                // 不限制跨域
+                services.AddCors(option => option.AddPolicy(CORS, policy => policy
+                    .AllowAnyOrigin()
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                ));
+            }
+            else
+            {
+                services.AddCors(option => option.AddPolicy(CORS, policy => policy
+                    .WithOrigins(corsConfig.Origins)
+                    .AllowAnyHeader()
+                    .AllowAnyMethod().
+                    AllowCredentials()
+                ));
+            }
 
             #endregion
 
@@ -144,13 +156,21 @@ namespace SysLog.Host
 
             #region DI
 
-            services.AddDbContext<OneForAllContext>(options =>
+            services.AddDbContext<OneForAll_SysLogContext>(options =>
                 options.UseSqlServer(Configuration["ConnectionStrings:Default"]));
             services.AddSingleton<IUploader, Uploader>();
             services.AddScoped<ITenantProvider, TenantProvider>();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddSingleton<HttpServiceConfig>();
             services.AddSingleton(authConfig);
+            #endregion
+
+            #region Redis
+            services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = Configuration["Redis:ConnectionString"];
+                options.InstanceName = Configuration["Redis:InstanceName"];
+            });
             #endregion
 
             #region Mvc
@@ -188,10 +208,10 @@ namespace SysLog.Host
                 .Where(t => t.Name.EndsWith("Manager"))
                 .AsImplementedInterfaces();
 
-            builder.RegisterType(typeof(OneForAllContext)).Named<DbContext>("OneForAllContext");
+            builder.RegisterType(typeof(OneForAll_SysLogContext)).Named<DbContext>("OneForAll_SysLogContext");
             builder.RegisterAssemblyTypes(Assembly.Load(BASE_REPOSITORY))
                .Where(t => t.Name.EndsWith("Repository"))
-               .WithParameter(ResolvedParameter.ForNamed<DbContext>("OneForAllContext"))
+               .WithParameter(ResolvedParameter.ForNamed<DbContext>("OneForAll_SysLogContext"))
                .AsImplementedInterfaces();
         }
 

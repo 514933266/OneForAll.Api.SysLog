@@ -9,8 +9,14 @@ namespace SysLog.Domain.AggregateRoots
     /// <summary>
     /// API日志
     /// </summary>
-    public class SysApiLog : AggregateRoot<Guid>
+    public class SysApiLog
     {
+        /// <summary>
+        /// 主键
+        /// </summary>
+        [Key]
+        public Guid Id { get; set; }
+
         /// <summary>
         /// 租户id
         /// </summary>
@@ -21,56 +27,56 @@ namespace SysLog.Domain.AggregateRoots
         /// 所属模块名称
         /// </summary>
         [Required]
-        [MaxLength(50)]
+        [StringLength(50)]
         public string MoudleName { get; set; }
 
         /// <summary>
         /// 模块代码
         /// </summary>
         [Required]
-        [MaxLength(50)]
+        [StringLength(50)]
         public string MoudleCode { get; set; }
 
         /// <summary>
         /// 控制器
         /// </summary>
         [Required]
-        [MaxLength(50)]
+        [StringLength(50)]
         public string Controller { get; set; }
 
         /// <summary>
         /// 控制器方法
         /// </summary>
         [Required]
-        [MaxLength(50)]
+        [StringLength(50)]
         public string Action { get; set; }
 
         /// <summary>
         /// 请求域名
         /// </summary>
         [Required]
-        [MaxLength(100)]
+        [StringLength(100)]
         public string Host { get; set; }
 
         /// <summary>
         /// 请求地址
         /// </summary>
         [Required]
-        [MaxLength(1000)]
+        [StringLength(1000)]
         public string Url { get; set; }
 
         /// <summary>
         /// 请求方法：GET、POST、PUT、DELETE等
         /// </summary>
         [Required]
-        [MaxLength(10)]
+        [StringLength(10)]
         public string Method { get; set; }
 
         /// <summary>
         /// 请求类型，如果是文件类型
         /// </summary>
         [Required]
-        [MaxLength(200)]
+        [StringLength(200)]
         public string ContentType { get; set; }
 
         /// <summary>
@@ -89,28 +95,28 @@ namespace SysLog.Domain.AggregateRoots
         /// 完整的浏览器信息
         /// </summary>
         [Required]
-        [MaxLength(300)]
+        [StringLength(300)]
         public string UserAgent { get; set; }
 
         /// <summary>
         /// Ip地址
         /// </summary>
         [Required]
-        [MaxLength(50)]
+        [StringLength(50)]
         public string IPAddress { get; set; }
 
         /// <summary>
         /// 消耗时间
         /// </summary>
         [Required]
-        [MaxLength(20)]
+        [StringLength(20)]
         public string TimeSpan { get; set; }
 
         /// <summary>
         /// 状态码
         /// </summary>
         [Required]
-        [MaxLength(10)]
+        [StringLength(10)]
         public string StatusCode { get; set; }
 
         /// <summary>
@@ -123,7 +129,7 @@ namespace SysLog.Domain.AggregateRoots
         /// 创建人名称
         /// </summary>
         [Required]
-        [MaxLength(20)]
+        [StringLength(20)]
         public string CreatorName { get; set; }
 
         /// <summary>

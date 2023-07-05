@@ -8,6 +8,10 @@ using Microsoft.EntityFrameworkCore;
 using SysLog.Domain.Repositorys;
 using SysLog.Domain.AggregateRoots;
 using System;
+using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
+using SysLog.Domain.Aggregates;
+using SysLog.Domain.ValueObjects;
 
 namespace SysLog.Repository
 {
@@ -54,9 +58,7 @@ namespace SysLog.Repository
 			if (!key.IsNullOrEmpty())
 				predicate = predicate.And(w => w.MoudleCode.Contains(key) || w.Controller.Contains(key) || w.Action.Contains(key));
 
-			var total = await DbSet
-			.AsNoTracking()
-			.CountAsync(predicate);
+			var total = await DbSet.AsNoTracking().CountAsync(predicate);
 
 			var items = await DbSet
 				.AsNoTracking()
@@ -70,14 +72,20 @@ namespace SysLog.Repository
 		}
 
 		/// <summary>
-		/// 添加
+		/// 查询用户日志列表
 		/// </summary>
-		/// <param name="entity">实体</param>
-		///  <returns>结果</returns>
-		public int Add(SysApiLog entity)
+		/// <param name="tenantId">机构id</param>
+		/// <param name="userId">用户id</param>
+		/// <param name="startTime">开始时间</param>
+		/// <param name="endTime">结束时间</param>
+		///  <returns>分页</returns>
+		public async Task<IEnumerable<UserLivenessApiLogVo>> GetListAsync(Guid tenantId, Guid userId, DateTime startTime, DateTime endTime)
 		{
-			DbSet.Add(entity);
-			return Context.SaveChanges();
+			return await DbSet
+				.AsNoTracking()
+				.Where(w => w.SysTenantId == tenantId && w.CreatorId == userId && w.CreateTime >= startTime && w.CreateTime <= endTime)
+				.Select(s => new UserLivenessApiLogVo() { Method = s.Method, CreateTime = s.CreateTime })
+				.ToListAsync();
 		}
-	}
+    }
 }

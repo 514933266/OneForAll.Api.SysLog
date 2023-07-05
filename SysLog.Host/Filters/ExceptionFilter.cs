@@ -7,6 +7,10 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc.Filters;
 using OneForAll.Core;
 using OneForAll.Core.Extension;
+using Base.Host.Models;
+using SysLog.Application.Interfaces;
+using SysLog.Domain.Models;
+
 namespace SysLog.Host.Filters
 {
     /// <summary>
@@ -14,6 +18,14 @@ namespace SysLog.Host.Filters
     /// </summary>
     public class ExceptionFilter : IAsyncExceptionFilter
     {
+        private readonly AuthConfig _authConfig;
+        private readonly ISysExceptionLogService _logService;
+        public ExceptionFilter(AuthConfig authConfig, ISysExceptionLogService logService)
+        {
+            _authConfig = authConfig;
+            _logService = logService;
+        }
+
         public Task OnExceptionAsync(ExceptionContext context)
         {
             if (context.ExceptionHandled == false)
@@ -30,6 +42,19 @@ namespace SysLog.Host.Filters
                     ContentType = "application/json;charset=utf-8",
                     Content = result.ToJson()
                 };
+                #region 记录日志
+                var controller = context.ActionDescriptor.RouteValues["controller"];
+                var action = context.ActionDescriptor.RouteValues["action"];
+                _logService.AddAsync(new SysExceptionLogForm()
+                {
+                    MoudleName = _authConfig.ClientName,
+                    MoudleCode = _authConfig.ClientCode,
+                    Controller = controller,
+                    Action = action,
+                    Name = context.Exception.Message,
+                    Content = context.Exception.StackTrace
+                });
+                #endregion
             }
             context.ExceptionHandled = true;
             return Task.CompletedTask;

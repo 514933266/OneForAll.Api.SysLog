@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using OneForAll.Core;
 using SysLog.Domain.AggregateRoots;
 using SysLog.Domain.Models;
@@ -7,17 +8,28 @@ using SysLog.Domain.Models;
 namespace SysLog.Domain.Interfaces
 {
     /// <summary>
-    /// 系统操作日志
+    /// 操作日志
     /// </summary>
     public interface ISysOperationLogManager
     {
+
         /// <summary>
         /// 查询分页
         /// </summary>
         /// <param name="pageIndex">页码</param>
-        /// <param name="pageSize">页数</param>
-        /// <param name="key">关键字：系统名称 模块名称</param>
-        Task<PageList<SysOperationLog>> GetPgaeAsync(int pageIndex, int pageSize, string key);
+	/// <param name="pageSize">页数</param>
+	/// <param name="startTime">开始时间</param>
+	/// <param name="endTime">结束时间</param>
+	/// <param name="userName">操作人</param>
+	/// <param name="key">关键字</param>
+        ///  <returns>分页</returns>
+        Task<PageList<SysOperationLog>> GetPgaeAsync(
+            int pageIndex,
+            int pageSize,
+            DateTime? startTime,
+            DateTime? endTime,
+            string userName,
+            string key);
 
         /// <summary>
         /// 添加
@@ -25,5 +37,6 @@ namespace SysLog.Domain.Interfaces
         /// <param name="entity">实体</param>
         /// <returns>结果</returns>
         Task<BaseErrType> AddAsync(SysOperationLogForm entity);
+
     }
 }

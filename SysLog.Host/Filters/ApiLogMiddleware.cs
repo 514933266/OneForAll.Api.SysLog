@@ -1,4 +1,5 @@
-﻿using Castle.Core.Logging;
+﻿using Base.Host.Models;
+using Castle.Core.Logging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Controllers;
@@ -24,11 +25,13 @@ namespace SysLog.Host.Filters
         private ISysApiLogService _service;
 
         private Stopwatch _stopWatch;
+        private readonly AuthConfig _authConfig;
         private RequestDelegate _request;
 
-        public ApiLogMiddleware(RequestDelegate request, ISysApiLogService service)
+        public ApiLogMiddleware(RequestDelegate request, AuthConfig authConfig, ISysApiLogService service)
         {
             _request = request;
+            _authConfig = authConfig;
             _service = service;
             _stopWatch = new Stopwatch();
         }
@@ -43,11 +46,11 @@ namespace SysLog.Host.Filters
 
             var data = new SysApiLogForm()
             {
-                MoudleName = "开发人员功能",
-                MoudleCode = "OneForAll.Sys",
+                MoudleName = _authConfig.ClientName,
+                MoudleCode = _authConfig.ClientCode,
                 CreatorId = loginUser.Id,
                 CreatorName = loginUser.Name,
-                TenantId = loginUser.TenantId,
+                TenantId = loginUser.SysTenantId,
                 Host = request.Host.ToString(),
                 Url = request.Path.ToString(),
                 Method = request.Method.ToUpper(),
@@ -145,7 +148,7 @@ namespace SysLog.Host.Filters
             {
                 Id = userId == null ? Guid.Empty : new Guid(userId.Value),
                 Name = name == null ? "" : name?.Value,
-                TenantId = tenantId == null ? Guid.Empty : new Guid(tenantId?.Value),
+                SysTenantId = tenantId == null ? Guid.Empty : new Guid(tenantId?.Value),
                 IsDefault = role == null ? false : role.Value.Equals(UserRoleType.RULER)
             };
         }

@@ -1,40 +1,47 @@
-﻿using System;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace SysLog.Domain.Models
 {
     /// <summary>
-    /// 系统操作日志
+    /// 操作日志
     /// </summary>
     public class SysOperationLogForm
     {
         /// <summary>
-        /// 系统名称
+        /// 租户id
+        /// </summary>
+        [Required]
+        public Guid TenantId { get; set; }
+
+        /// <summary>
+        /// 所属模块名称
         /// </summary>
         [Required]
         [StringLength(50)]
-        public string SystemName { get; set; }
+        public string MoudleName { get; set; }
 
         /// <summary>
-        /// 系统代码，OneForAll.OA
-        /// </summary>
-        [Required]
-        [StringLength(100)]
-        public string SystemCode { get; set; }
-
-        /// <summary>
-        /// 模块名称
+        /// 模块代码
         /// </summary>
         [Required]
         [StringLength(50)]
-        public string ModuleName { get; set; }
+        public string MoudleCode { get; set; }
 
         /// <summary>
-        /// 模块代码，OAPerson
+        /// 控制器
         /// </summary>
         [Required]
-        [StringLength(200)]
-        public string ModuleCode { get; set; }
+        [StringLength(50)]
+        public string Controller { get; set; }
+
+        /// <summary>
+        /// 控制器方法
+        /// </summary>
+        [Required]
+        [StringLength(50)]
+        public string Action { get; set; }
 
         /// <summary>
         /// 操作类型
@@ -44,14 +51,9 @@ namespace SysLog.Domain.Models
         public string Type { get; set; }
 
         /// <summary>
-        /// 级别
-        /// </summary>
-        [Required]
-        public int Grade { get; set; }
-
-        /// <summary>
         /// 详细内容
         /// </summary>
+        [Required]
         public string Content { get; set; }
 
         /// <summary>
@@ -61,16 +63,22 @@ namespace SysLog.Domain.Models
         public string Remark { get; set; }
 
         /// <summary>
-        /// 操作人id
+        /// 创建人id
         /// </summary>
         [Required]
         public Guid CreatorId { get; set; }
 
         /// <summary>
-        /// 操作人姓名
+        /// 创建人名称
         /// </summary>
         [Required]
         [StringLength(20)]
         public string CreatorName { get; set; }
+
+        /// <summary>
+        /// 创建时间
+        /// </summary>
+        [Required]
+        public DateTime CreateTime { get; set; }
     }
 }

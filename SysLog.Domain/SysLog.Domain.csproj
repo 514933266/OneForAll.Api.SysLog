@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <LangVersion>7.1</LangVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
@@ -14,12 +14,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AutoMapper" Version="11.0.1" />
+    <PackageReference Include="AutoMapper" Version="12.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="OneForAll.Core" Version="1.1.0" />
-    <PackageReference Include="OneForAll.EFCore" Version="1.1.0" />
-    <PackageReference Include="OneForAll.File" Version="1.1.5" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="OneForAll.Core" Version="1.2.0.3" />
+    <PackageReference Include="OneForAll.EFCore" Version="1.2.2.4" />
+    <PackageReference Include="OneForAll.File" Version="1.2.0" />
   </ItemGroup>
 
   <ItemGroup>

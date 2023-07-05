@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using OneForAll.Core;
 using OneForAll.EFCore;
 using SysLog.Domain.AggregateRoots;
+using SysLog.Domain.ValueObjects;
 
 namespace SysLog.Domain.Repositorys
 {
@@ -30,10 +32,13 @@ namespace SysLog.Domain.Repositorys
             string key);
 
         /// <summary>
-		/// 添加
+		/// 查询用户日志列表
 		/// </summary>
-		/// <param name="entity">实体</param>
-		///  <returns>结果</returns>
-		int Add(SysApiLog entity);
+		/// <param name="tenantId">机构id</param>
+		/// <param name="userId">用户id</param>
+		/// <param name="startTime">开始时间</param>
+		/// <param name="endTime">结束时间</param>
+		///  <returns>分页</returns>
+		Task<IEnumerable<UserLivenessApiLogVo>> GetListAsync(Guid tenantId, Guid userId, DateTime startTime, DateTime endTime);
     }
 }

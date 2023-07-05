@@ -19,15 +19,13 @@ namespace SysLog.Domain
         protected readonly IMapper _mapper;
         protected readonly IHttpContextAccessor _httpContextAccessor;
 
-        public SysBaseManager(
-            IMapper mapper,
-            IHttpContextAccessor httpContextAccessor)
+        public SysBaseManager(IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
         }
 
-        protected Guid UserId
+        protected Guid SysUserId
         {
             get
             {
@@ -61,7 +59,7 @@ namespace SysLog.Domain
             }
         }
 
-        protected Guid TenantId
+        protected Guid SysTenantId
         {
             get
             {
@@ -94,9 +92,9 @@ namespace SysLog.Domain
 
                 return new LoginUser()
                 {
-                    Id = UserId,
+                    Id = SysUserId,
                     Name = name.Value,
-                    TenantId = TenantId
+                    SysTenantId = SysTenantId
                 };
             }
         }

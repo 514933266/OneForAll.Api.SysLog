@@ -8,6 +8,7 @@ using SysLog.Domain.Models;
 using SysLog.Public.Models;
 using SysLog.Application.Dtos;
 using SysLog.Application.Interfaces;
+using SysLog.Host.Filters;
 
 namespace SysLog.Host.Controllers
 {
@@ -15,8 +16,8 @@ namespace SysLog.Host.Controllers
 	/// 系统日志信息
 	/// </summary>
 	[Route("api/[controller]")]
-	[Authorize(Roles = UserRoleType.RULER)]
-	public class SysApiLogsController : BaseController
+    [Authorize(Roles = UserRoleType.ADMIN)]
+    public class SysApiLogsController : BaseController
 	{
 		private readonly ISysApiLogService _service;
 
@@ -37,7 +38,8 @@ namespace SysLog.Host.Controllers
 		///  <returns>分页</returns>
 		[HttpGet]
 		[Route("{pageIndex}/{pageSize}")]
-		public async Task<PageList<SysApiLogDto>> GetPgaeAsync(
+        [CheckPermission(Action = ConstPermission.EnterView)]
+        public async Task<PageList<SysApiLogDto>> GetPgaeAsync(
 			int pageIndex,
 			int pageSize,
 			[FromQuery] DateTime? startTime,
@@ -52,8 +54,7 @@ namespace SysLog.Host.Controllers
 		/// 添加
 		/// </summary>
 		[HttpPost]
-		[AllowAnonymous]
-		public async Task<BaseMessage> AddAsync([FromBody] SysApiLogForm entity)
+        public async Task<BaseMessage> AddAsync([FromBody] SysApiLogForm entity)
 		{
 			var msg = new BaseMessage();
 			msg.ErrType = await _service.AddAsync(entity);

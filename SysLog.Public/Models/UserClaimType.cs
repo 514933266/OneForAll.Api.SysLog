@@ -17,12 +17,12 @@ namespace SysLog.Public.Models
         /// <summary>
         /// 用户名
         /// </summary>
-        public const string USERNAME = "Username";
+        public const string USERNAME = "UserName";
 
         /// <summary>
         /// 名称
         /// </summary>
-        public const string USER_NICKNAME = "UserNickname";
+        public const string USER_NICKNAME = "UserNickName";
 
         /// <summary>
         /// id
@@ -33,5 +33,10 @@ namespace SysLog.Public.Models
         /// 角色
         /// </summary>
         public const string ROLE = "Role";
+
+        /// <summary>
+        /// 人员档案id
+        /// </summary>
+        public const string PERSON_ID = "PersonId";
     }
 }

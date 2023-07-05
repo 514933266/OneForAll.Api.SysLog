@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SysLog.Domain.Models
 {
@@ -120,5 +122,11 @@ namespace SysLog.Domain.Models
         [Required]
         [StringLength(20)]
         public string CreatorName { get; set; }
+
+        /// <summary>
+        /// 创建时间
+        /// </summary>
+        [Required]
+        public DateTime CreateTime { get; set; }
     }
 }

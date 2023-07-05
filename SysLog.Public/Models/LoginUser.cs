@@ -19,7 +19,7 @@ namespace SysLog.Public.Models
         /// <summary>
         /// 所属机构id
         /// </summary>
-        public Guid TenantId { get; set; }
+        public Guid SysTenantId { get; set; }
 
         /// <summary>
         /// 名称
