@@ -23,13 +23,7 @@ namespace SysLog.Domain.Repositorys
 		/// <param name="userName">操作人</param>
 		/// <param name="key">关键字</param>
         ///  <returns>分页</returns>
-        Task<PageList<SysApiLog>> GetPgaeAsync(
-            int pageIndex,
-            int pageSize,
-            DateTime? startTime,
-            DateTime? endTime,
-            string userName,
-            string key);
+        Task<PageList<SysApiLog>> GetPgaeAsync(int pageIndex, int pageSize, DateTime? startTime, DateTime? endTime, string userName, string controller, string action, string key);
 
         /// <summary>
 		/// 查询用户日志列表

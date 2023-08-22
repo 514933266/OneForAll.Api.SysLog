@@ -37,17 +37,13 @@ namespace SysLog.Domain
 		/// <param name="startTime">开始时间</param>
 		/// <param name="endTime">结束时间</param>
 		/// <param name="userName">操作人</param>
+        /// <param name="controller">控制器</param>
+        /// <param name="action">方法</param>
 		/// <param name="key">关键字</param>
 		///  <returns>分页</returns>
-		public async Task<PageList<SysApiLog>> GetPgaeAsync(
-            int pageIndex,
-            int pageSize,
-            DateTime? startTime,
-            DateTime? endTime,
-            string userName,
-            string key)
+		public async Task<PageList<SysApiLog>> GetPgaeAsync(int pageIndex, int pageSize, DateTime? startTime, DateTime? endTime, string userName, string controller, string action, string key)
         {
-            return await _repository.GetPgaeAsync(pageIndex, pageSize, startTime, endTime, userName, key);
+            return await _repository.GetPgaeAsync(pageIndex, pageSize, startTime, endTime, userName, controller, action, key);
         }
 
         /// <summary>
