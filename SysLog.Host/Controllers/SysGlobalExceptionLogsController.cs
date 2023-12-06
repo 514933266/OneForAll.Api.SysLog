@@ -16,7 +16,6 @@ namespace SysLog.Host.Controllers
 	/// 全局异常
 	/// </summary>
 	[Route("api/[controller]")]
-	[Authorize(Roles = UserRoleType.ADMIN)]
 	public class SysGlobalExceptionLogsController : BaseController
 	{
 		private readonly ISysGlobalExceptionLogService _service;

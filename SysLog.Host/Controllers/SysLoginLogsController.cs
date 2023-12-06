@@ -16,7 +16,6 @@ namespace SysLog.Host.Controllers
 	/// 登录日志
 	/// </summary>
 	[Route("api/[controller]")]
-	[Authorize(Roles = UserRoleType.ADMIN)]
 	public class SysLoginLogsController : BaseController
 	{
 		private readonly ISysLoginLogService _service;

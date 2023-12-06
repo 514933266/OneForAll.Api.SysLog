@@ -14,5 +14,10 @@ namespace SysLog.HttpService.Models
         /// 权限验证接口
         /// </summary>
         public string SysPermissionCheck { get; set; } = "SysPermissionCheck";
+
+        /// <summary>
+        /// 企业微信通知
+        /// </summary>
+        public string UmsWechatQyRobot { get; set; } = "UmsWechatQyRobot";
     }
 }

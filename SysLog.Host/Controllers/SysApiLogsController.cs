@@ -16,7 +16,6 @@ namespace SysLog.Host.Controllers
 	/// 系统日志信息
 	/// </summary>
 	[Route("api/[controller]")]
-    [Authorize(Roles = UserRoleType.ADMIN)]
     public class SysApiLogsController : BaseController
 	{
 		private readonly ISysApiLogService _service;

@@ -56,7 +56,7 @@ namespace SysLog.Domain
                 if (cache.IsNullOrEmpty())
                 {
                     // 没有缓存，直接读库
-                    var data = await _repository.GetListAsync(LoginUser.SysTenantId, LoginUser.Id, startTime, endTime);
+                    var data = await _repository.GetListAsync(LoginUser.SysTenantId, startTime, endTime);
                     result.CalculateDateScope(data);
                     await _cacheRepository.SetStringAsync(cacheKey, result.ToJson(), new DistributedCacheEntryOptions() { SlidingExpiration = TimeSpan.FromMinutes(10) });
                 }
@@ -67,7 +67,7 @@ namespace SysLog.Domain
             }
             catch
             {
-                var data = await _repository.GetListAsync(LoginUser.SysTenantId, LoginUser.Id, startTime, endTime);
+                var data = await _repository.GetListAsync(LoginUser.SysTenantId, startTime, endTime);
                 result.CalculateDateScope(data);
             }
 

@@ -20,6 +20,11 @@ namespace SysLog.Domain.ValueObjects
         public string Method { get; set; }
 
         /// <summary>
+        /// 用户id
+        /// </summary>
+        public Guid CreatorId { get; set; }
+
+        /// <summary>
         /// 创建时间
         /// </summary>
         public DateTime CreateTime { get; set; }

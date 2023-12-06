@@ -27,6 +27,11 @@ namespace SysLog.Public.Models
         public string Name { get; set; }
 
         /// <summary>
+        /// 账号
+        /// </summary>
+        public string UserName { get; set; }
+
+        /// <summary>
         /// 是否默认
         /// </summary>
         public bool IsDefault { get; set; }

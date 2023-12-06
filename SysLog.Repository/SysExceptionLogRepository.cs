@@ -38,16 +38,24 @@ namespace SysLog.Repository
 		/// <param name="action">方法</param>
 		/// <param name="key">关键字</param>
 		///  <returns>分页</returns>
-		public async Task<PageList<SysExceptionLog>> GetPgaeAsync(int pageIndex, int pageSize, DateTime? startTime, DateTime? endTime, string userName, string controller, string action, string key)
+		public async Task<PageList<SysExceptionLog>> GetPgaeAsync(
+			int pageIndex,
+			int pageSize,
+			DateTime? startTime,
+			DateTime? endTime,
+			string userName,
+			string controller,
+			string action,
+			string key)
 		{
 			var predicate = PredicateBuilder.Create<SysExceptionLog>(w => true);
 
 			if (!userName.IsNullOrEmpty())
-				predicate = predicate.And(w => w.CreatorName.Contains(key));
+				predicate = predicate.And(w => w.CreatorName.Contains(userName));
 			if (!controller.IsNullOrEmpty())
-				predicate = predicate.And(w => w.Controller.Contains(key));
+				predicate = predicate.And(w => w.Controller.Contains(controller));
 			if (!action.IsNullOrEmpty())
-				predicate = predicate.And(w => w.Action.Contains(key));
+				predicate = predicate.And(w => w.Action.Contains(action));
 			if (startTime != null)
 				predicate = predicate.And(w => w.CreateTime >= startTime);
 			if (endTime != null)

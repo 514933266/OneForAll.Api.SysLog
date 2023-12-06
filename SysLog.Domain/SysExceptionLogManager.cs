@@ -41,9 +41,17 @@ namespace SysLog.Domain
         /// <param name="action">方法</param>
         /// <param name="key">关键字</param>
         ///  <returns>分页</returns>
-        public async Task<PageList<SysExceptionLog>> GetPgaeAsync(int pageIndex, int pageSize, DateTime? startTime, DateTime? endTime, string userName, string controller, string action, string key)
+        public async Task<PageList<SysExceptionLog>> GetPgaeAsync(
+            int pageIndex,
+            int pageSize,
+            DateTime? startTime,
+            DateTime? endTime,
+            string userName,
+            string controller,
+            string action,
+            string key)
         {
-            return await _repository.GetPgaeAsync(pageIndex, pageSize, startTime, endTime, controller, action, userName, key);
+            return await _repository.GetPgaeAsync(pageIndex, pageSize, startTime, endTime, userName, controller, action, key);
         }
 
         /// <summary>

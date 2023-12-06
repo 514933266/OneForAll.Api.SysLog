@@ -51,14 +51,14 @@ namespace SysLog.Host.Controllers
 			[FromQuery] string action = default,
 			[FromQuery] string key = default)
 		{
-			return await _service.GetPgaeAsync(pageIndex, pageSize, startTime, endTime, controller, action, userName, key);
+			return await _service.GetPgaeAsync(pageIndex, pageSize, startTime, endTime, userName, controller, action, key);
 		}
 
 		/// <summary>
 		/// 添加
 		/// </summary>
 		[HttpPost]
-        public async Task<BaseMessage> AddAsync([FromBody] SysExceptionLogForm entity)
+		public async Task<BaseMessage> AddAsync([FromBody] SysExceptionLogForm entity)
 		{
 			var msg = new BaseMessage();
 			msg.ErrType = await _service.AddAsync(entity);

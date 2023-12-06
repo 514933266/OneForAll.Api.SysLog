@@ -20,5 +20,10 @@ namespace SysLog.Domain.ValueObjects
         /// 数值
         /// </summary>
         public int Value { get; set; }
+
+        /// <summary>
+        /// 平均数值
+        /// </summary>
+        public int AvgValue { get; set; }
     }
 }

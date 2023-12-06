@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace SysLog.Domain.Aggregates
 {
@@ -59,25 +60,33 @@ namespace SysLog.Domain.Aggregates
         {
             foreach (var date in Dates)
             {
-                var items = logs.Where(w => w.CreateTime.Date == date.Date).ToList();
-                if (items.Any())
+                var items = logs.Where(w => w.CreateTime.Date == date.Date && w.CreatorId == UserId).ToList();
+                var avgItems = logs.Where(w => w.CreateTime.Date == date.Date && w.CreatorId != UserId).ToList();
+                var count = avgItems.GroupBy(g => g.CreatorId).Count();
+                date.Value = CalculateScope(items);
+                date.AvgValue = count > 0 ? CalculateScope(avgItems) / count : CalculateScope(avgItems);
+            }
+        }
+
+        private int CalculateScope(IEnumerable<UserLivenessApiLogVo> items)
+        {
+            var scope = 0;
+            if (items.Any())
+            {
+                foreach (var log in items)
                 {
-                    var scope = 0;
-                    foreach (var log in items)
+                    switch (log.Method)
                     {
-                        switch (log.Method)
-                        {
-                            case "GET": scope += 2; break;
-                            case "POST": scope += 6; break;
-                            case "PUT": scope += 5; break;
-                            case "PATCH": scope += 3; break;
-                            case "DELETE": scope += 4; break;
-                            default: scope += 1; break;
-                        }
+                        case "GET": scope += 1; break;
+                        case "POST": scope += 10; break;
+                        case "PUT": scope += 10; break;
+                        case "PATCH": scope += 10; break;
+                        case "DELETE": scope += 10; break;
+                        default: scope += 1; break;
                     }
-                    date.Value = scope;
                 }
             }
+            return scope;
         }
     }
 }
