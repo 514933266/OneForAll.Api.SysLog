@@ -6,9 +6,9 @@ using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace SysLog.Host
 {
-    public partial class OneForAll_SysLogContext : DbContext
+    public partial class OneForAllDbContext : DbContext
     {
-        public OneForAll_SysLogContext(DbContextOptions<OneForAll_SysLogContext> options)
+        public OneForAllDbContext(DbContextOptions<OneForAllDbContext> options)
             : base(options)
         {
             

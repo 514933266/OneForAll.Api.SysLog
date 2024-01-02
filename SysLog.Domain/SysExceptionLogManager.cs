@@ -11,6 +11,10 @@ using SysLog.Domain.Interfaces;
 using SysLog.Domain.Repositorys;
 using SysLog.Domain.AggregateRoots;
 using Microsoft.AspNetCore.Http;
+using System.Text;
+using SysLog.HttpService.Models;
+using Microsoft.Extensions.Configuration;
+using SysLog.HttpService.Interfaces;
 
 namespace SysLog.Domain
 {
@@ -19,14 +23,20 @@ namespace SysLog.Domain
     /// </summary>
     public class SysExceptionLogManager : SysBaseManager, ISysExceptionLogManager
     {
+        private readonly IConfiguration _configuration;
         private readonly ISysExceptionLogRepository _repository;
+        private readonly ISysUmsMessageHttpService _umsHttpService;
 
         public SysExceptionLogManager(
             IMapper mapper,
+            IConfiguration configuration,
             IHttpContextAccessor httpContextAccessor,
-            ISysExceptionLogRepository repository) : base(mapper, httpContextAccessor)
+            ISysExceptionLogRepository repository,
+            ISysUmsMessageHttpService umsHttpService) : base(mapper, httpContextAccessor)
         {
+            _configuration = configuration;
             _repository = repository;
+            _umsHttpService = umsHttpService;
         }
 
         /// <summary>
@@ -57,12 +67,13 @@ namespace SysLog.Domain
         /// <summary>
         /// 添加
         /// </summary>
-        /// <param name="entity">实体</param>
+        /// <param name="form">实体</param>
         /// <returns>结果</returns>
-        public async Task<BaseErrType> AddAsync(SysExceptionLogForm entity)
+        public async Task<BaseErrType> AddAsync(SysExceptionLogForm form)
         {
-            var data = _mapper.Map<SysExceptionLogForm, SysExceptionLog>(entity);
-
+            var data = _mapper.Map<SysExceptionLogForm, SysExceptionLog>(form);
+            if (data.CreateTime == DateTime.MinValue || data.CreateTime == DateTime.MaxValue)
+                data.CreateTime = DateTime.Now;
             return await ResultAsync(() => _repository.AddAsync(data));
         }
     }

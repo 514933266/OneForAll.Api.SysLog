@@ -23,6 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\SysLog.HttpService\SysLog.HttpService.csproj" />
     <ProjectReference Include="..\SysLog.Public\SysLog.Public.csproj" />
   </ItemGroup>
 

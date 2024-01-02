@@ -9,6 +9,11 @@ using SysLog.Domain.Interfaces;
 using SysLog.Domain.Repositorys;
 using SysLog.Domain.AggregateRoots;
 using SysLog.Application.Interfaces;
+using SysLog.HttpService.Interfaces;
+using SysLog.HttpService.Models;
+using System.Text;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 
 namespace SysLog.Application
 {
@@ -18,16 +23,19 @@ namespace SysLog.Application
 	public class SysExceptionLogService : ISysExceptionLogService
 	{
 		private readonly IMapper _mapper;
+		private readonly IConfiguration _configuration;
 		private readonly ISysExceptionLogManager _manager;
-		private readonly ISysExceptionLogRepository _repository;
+		private readonly ISysUmsMessageHttpService _umsHttpService;
 		public SysExceptionLogService(
 			IMapper mapper,
+			IConfiguration configuration,
 			ISysExceptionLogManager manager,
-			ISysExceptionLogRepository repository)
+			ISysUmsMessageHttpService umsHttpService)
 		{
 			_mapper = mapper;
 			_manager = manager;
-			_repository = repository;
+			_configuration = configuration;
+			_umsHttpService = umsHttpService;
 		}
 
 		/// <summary>
@@ -60,11 +68,34 @@ namespace SysLog.Application
 		/// <summary>
 		/// 添加
 		/// </summary>
-		/// <param name="entity">实体</param>
+		/// <param name="form">实体</param>
 		/// <returns>结果</returns>
-		public async Task<BaseErrType> AddAsync(SysExceptionLogForm entity)
+		public async Task<BaseErrType> AddAsync(SysExceptionLogForm form)
 		{
-			return await _manager.AddAsync(entity);
+			var url = _configuration["HttpService:UmsWechatQyRobotWebhookUrl"];
+			if (!url.IsNullOrEmpty())
+			{
+				var content = GetWechatQyRobotTextContent(form);
+
+				await _umsHttpService.SendToWechatQyRobotMarkdownAsync(new UmsWechatQyRobotTextForm()
+				{
+					Content = content,
+					WebhookUrl = url
+				});
+			}
+			return await _manager.AddAsync(form);
+		}
+
+		private string GetWechatQyRobotTextContent(SysExceptionLogForm form)
+		{
+			var sb = new StringBuilder("## <font color=\"red\">警告：服务引发异常</font>  \r\n");
+			sb.Append($"模块：{form.MoudleName}  \r\n");
+			sb.Append($"代码：{form.MoudleCode}  \r\n");
+			sb.Append($"控制器：{form.Controller}  \r\n");
+			sb.Append($"方法：{form.Action}  \r\n");
+			sb.Append($"异常摘要：{form.Name}  \r\n");
+			sb.Append($"发生时间：{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}  \r\n");
+			return sb.ToString();
 		}
 	}
 }

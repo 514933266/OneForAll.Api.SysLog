@@ -14,7 +14,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Newtonsoft.Json.Serialization;
-using AutoMapper;
 using Newtonsoft.Json;
 using OneForAll.EFCore;
 using Microsoft.OpenApi.Models;
@@ -23,14 +22,16 @@ using OneForAll.Core.Extension;
 using SysLog.Host.Model;
 using SysLog.Host.Models;
 using Autofac.Core;
-using Microsoft.AspNetCore.Mvc;
 using SysLog.Host.Filters;
 using OneForAll.Core.Upload;
 using OneForAll.File;
-using SysLog.Host.Hubs;
 using SysLog.HttpService.Models;
 using SysLog.Public.Models;
 using Base.Host.Models;
+using SysLog.Host.Providers;
+using Quartz.Impl;
+using Quartz.Spi;
+using Quartz;
 
 namespace SysLog.Host
 {
@@ -38,12 +39,13 @@ namespace SysLog.Host
     {
         const string CORS = "Cors";
         const string AUTH = "Auth";
+        const string QUARTZ = "Quartz";
         const string BASE_HOST = "SysLog.Host";
         const string BASE_APPLICATION = "SysLog.Application";
         const string BASE_DOMAIN = "SysLog.Domain";
         const string BASE_REPOSITORY = "SysLog.Repository";
-        private readonly string HTTP_SERVICE_KEY = "HttpService";
-        private readonly string HTTP_SERVICE = "SysLog.HttpService";
+        const string HTTP_SERVICE_KEY = "HttpService";
+        const string HTTP_SERVICE = "SysLog.HttpService";
         public IConfiguration Configuration { get; }
 
         public Startup(IConfiguration configuration)
@@ -114,6 +116,31 @@ namespace SysLog.Host
             });
             #endregion
 
+            #region Quartz
+
+            var quartzConfig = new QuartzScheduleJobConfig();
+            Configuration.GetSection(QUARTZ).Bind(quartzConfig);
+            // 注册QuartzJobs目录下的定时任务
+            if (quartzConfig != null)
+            {
+                services.AddSingleton(quartzConfig);
+                services.AddSingleton<IJobFactory, ScheduleJobFactory>();
+                services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();
+                services.AddHostedService<QuartzJobHostService>();
+                var jobNamespace = BASE_HOST.Append(".QuartzJobs");
+                quartzConfig.ScheduleJobs.ForEach(e =>
+                {
+                    var typeName = jobNamespace + "." + e.TypeName;
+                    var jobType = Assembly.Load(BASE_HOST).GetType(typeName);
+                    if (jobType != null)
+                    {
+                        e.JobType = jobType;
+                        services.AddSingleton(e.JobType);
+                    }
+                });
+            }
+            #endregion
+
             #region Http
 
             var serviceConfig = new HttpServiceConfig();
@@ -156,7 +183,7 @@ namespace SysLog.Host
 
             #region DI
 
-            services.AddDbContext<OneForAll_SysLogContext>(options =>
+            services.AddDbContext<OneForAllDbContext>(options =>
                 options.UseSqlServer(Configuration["ConnectionStrings:Default"]));
             services.AddSingleton<IUploader, Uploader>();
             services.AddScoped<ITenantProvider, TenantProvider>();
@@ -208,10 +235,10 @@ namespace SysLog.Host
                 .Where(t => t.Name.EndsWith("Manager"))
                 .AsImplementedInterfaces();
 
-            builder.RegisterType(typeof(OneForAll_SysLogContext)).Named<DbContext>("OneForAll_SysLogContext");
+            builder.RegisterType(typeof(OneForAllDbContext)).Named<DbContext>("OneForAllDbContext");
             builder.RegisterAssemblyTypes(Assembly.Load(BASE_REPOSITORY))
                .Where(t => t.Name.EndsWith("Repository"))
-               .WithParameter(ResolvedParameter.ForNamed<DbContext>("OneForAll_SysLogContext"))
+               .WithParameter(ResolvedParameter.ForNamed<DbContext>("OneForAllDbContext"))
                .AsImplementedInterfaces();
         }
 

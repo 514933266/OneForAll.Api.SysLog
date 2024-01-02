@@ -85,48 +85,41 @@ namespace SysLog.Domain.Models
         /// <summary>
         /// 完整的浏览器信息
         /// </summary>
-        [Required]
         [StringLength(300)]
         public string UserAgent { get; set; }
 
         /// <summary>
         /// Ip地址
         /// </summary>
-        [Required]
         [StringLength(50)]
         public string IPAddress { get; set; }
 
         /// <summary>
         /// 消耗时间
         /// </summary>
-        [Required]
         [StringLength(20)]
         public string TimeSpan { get; set; }
 
         /// <summary>
         /// 状态码
         /// </summary>
-        [Required]
         [StringLength(10)]
         public string StatusCode { get; set; }
 
         /// <summary>
         /// 创建人id
         /// </summary>
-        [Required]
         public Guid CreatorId { get; set; }
 
         /// <summary>
         /// 创建人名称
         /// </summary>
-        [Required]
         [StringLength(20)]
         public string CreatorName { get; set; }
 
         /// <summary>
         /// 创建时间
         /// </summary>
-        [Required]
         public DateTime CreateTime { get; set; }
     }
 }

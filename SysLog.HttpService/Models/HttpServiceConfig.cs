@@ -19,5 +19,10 @@ namespace SysLog.HttpService.Models
         /// 企业微信通知
         /// </summary>
         public string UmsWechatQyRobot { get; set; } = "UmsWechatQyRobot";
+
+        /// <summary>
+        /// 定时任务调度中心
+        /// </summary>
+        public string ScheduleJob { get; set; } = "ScheduleJob";
     }
 }

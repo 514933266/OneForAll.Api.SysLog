@@ -96,7 +96,7 @@ namespace SysLog.Domain.AggregateRoots
         /// </summary>
         [Required]
         [StringLength(300)]
-        public string UserAgent { get; set; }
+        public string UserAgent { get; set; } = "";
 
         /// <summary>
         /// Ip地址
@@ -110,14 +110,14 @@ namespace SysLog.Domain.AggregateRoots
         /// </summary>
         [Required]
         [StringLength(20)]
-        public string TimeSpan { get; set; }
+        public string TimeSpan { get; set; } = "00:00:00";
 
         /// <summary>
         /// 状态码
         /// </summary>
         [Required]
         [StringLength(10)]
-        public string StatusCode { get; set; }
+        public string StatusCode { get; set; } = "200";
 
         /// <summary>
         /// 创建人id
@@ -130,7 +130,7 @@ namespace SysLog.Domain.AggregateRoots
         /// </summary>
         [Required]
         [StringLength(20)]
-        public string CreatorName { get; set; }
+        public string CreatorName { get; set; } = "系统用户";
 
         /// <summary>
         /// 创建时间

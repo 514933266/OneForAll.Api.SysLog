@@ -58,7 +58,8 @@ namespace SysLog.Domain
         public async Task<BaseErrType> AddAsync(SysGlobalExceptionLogForm entity)
         {
             var data = _mapper.Map<SysGlobalExceptionLogForm, SysGlobalExceptionLog>(entity);
-
+            if (data.CreateTime == DateTime.MinValue || data.CreateTime == DateTime.MaxValue)
+                data.CreateTime = DateTime.Now;
             return await ResultAsync(() => _repository.AddAsync(data));
         }
     }
