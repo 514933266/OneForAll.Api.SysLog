@@ -1,4 +1,4 @@
-﻿using Base.Host.Models;
+﻿using SysLog.Host.Models;
 using Quartz;
 using SysLog.HttpService.Interfaces;
 using System.Threading.Tasks;
@@ -7,6 +7,7 @@ using SysLog.Domain.Repositorys;
 using System.Linq;
 using SysLog.Application.Interfaces;
 using SysLog.Domain.Models;
+using NPOI.SS.Formula.Functions;
 
 namespace SysLog.Host.QuartzJobs
 {
@@ -48,36 +49,37 @@ namespace SysLog.Host.QuartzJobs
         {
             try
             {
-                var apis = await _apiRepository.GetListAsync(w => w.CreateTime < DateTime.Now.AddMonths(-3));
+                var apis = await _apiRepository.GetListAsync(w => w.CreateTime < DateTime.Now.AddMonths(-3) && w.Method == "GET");
                 if (apis.Any())
                 {
                     var num = await _apiRepository.DeleteRangeAsync(apis);
-                    await AddLogAsync($"删除Api日志（3个月前）任务执行完成，删除{num}条");
+                    await AddLogAsync($"删除Api日志（3个月前GET请求）任务执行完成，删除{num}条");
                 }
-                var exs = await _exRepository.GetListAsync(w => w.CreateTime < DateTime.Now.AddMonths(-1));
-                if (exs.Any())
-                {
-                    var num = await _exRepository.DeleteRangeAsync(exs);
-                    await AddLogAsync($"删除异常日志（1个月前）任务执行完成，删除{num}条");
-                }
-                var gexs = await _gexRepository.GetListAsync(w => w.CreateTime < DateTime.Now.AddMonths(-1));
-                if (gexs.Any())
-                {
-                    var num = await _gexRepository.DeleteRangeAsync(gexs);
-                    await AddLogAsync($"删除全局异常日志（1个月前）任务执行完成，删除{num}条");
-                }
-                var logs = await _loginRepository.GetListAsync(w => w.CreateTime < DateTime.Now.AddMonths(-1));
-                if (logs.Any())
-                {
-                    var num = await _loginRepository.DeleteRangeAsync(logs);
-                    await AddLogAsync($"删除登录日志（1个月前）任务执行完成，删除{num}条");
-                }
-                var operas = await _operaRepository.GetListAsync(w => w.CreateTime < DateTime.Now.AddMonths(-3));
-                if (exs.Any())
-                {
-                    var num = await _operaRepository.DeleteRangeAsync(operas);
-                    await AddLogAsync($"删除操作日志（3个月前）任务执行完成，删除{num}条");
-                }
+                //var exs = await _exRepository.GetListAsync(w => w.CreateTime < DateTime.Now.AddYears(-1));
+                //if (exs.Any())
+                //{
+                //    var num = await _exRepository.DeleteRangeAsync(exs);
+                //    await AddLogAsync($"删除异常日志任务执行完成，删除{num}条");
+                //}
+                //var gexs = await _gexRepository.GetListAsync(w => w.CreateTime < DateTime.Now.AddYears(-1));
+                //if (gexs.Any())
+                //{
+                //    var num = await _gexRepository.DeleteRangeAsync(gexs);
+                //    await AddLogAsync($"删除全局异常日志任务执行完成，删除{num}条");
+                //}
+                //var logs = await _loginRepository.GetListAsync(w => w.CreateTime < DateTime.Now.AddMonths(-1));
+                //if (logs.Any())
+                //{
+                //    var num = await _loginRepository.DeleteRangeAsync(logs);
+                //    await AddLogAsync($"删除登录日志任务执行完成，删除{num}条");
+                //}
+                //var operas = await _operaRepository.GetListAsync(w => w.CreateTime < DateTime.Now.AddMonths(-3));
+                //if (operas.Any())
+                //{
+                //    var num = await _operaRepository.DeleteRangeAsync(operas);
+                //    await AddLogAsync($"删除操作日志（3个月前）任务执行完成，删除{num}条");
+                //}
+                await AddLogAsync($"删除日志任务执行完成");
             }
             catch (Exception ex)
             {

@@ -27,7 +27,7 @@ using OneForAll.Core.Upload;
 using OneForAll.File;
 using SysLog.HttpService.Models;
 using SysLog.Public.Models;
-using Base.Host.Models;
+using SysLog.Host.Models;
 using SysLog.Host.Providers;
 using Quartz.Impl;
 using Quartz.Spi;

@@ -9,6 +9,7 @@ using SysLog.Public.Models;
 using SysLog.Application.Dtos;
 using SysLog.Application.Interfaces;
 using SysLog.Host.Filters;
+using OneForAll.Core.OAuth;
 
 namespace SysLog.Host.Controllers
 {

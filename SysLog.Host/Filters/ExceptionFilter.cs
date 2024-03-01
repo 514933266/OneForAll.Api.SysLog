@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc.Filters;
 using OneForAll.Core;
 using OneForAll.Core.Extension;
-using Base.Host.Models;
+using SysLog.Host.Models;
 using SysLog.Application.Interfaces;
 using SysLog.Domain.Models;
 

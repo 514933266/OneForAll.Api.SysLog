@@ -1,12 +1,7 @@
-﻿using Base.Host.Models;
-using Castle.Core.Logging;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Controllers;
-using SysLog.Application.Interfaces;
-using SysLog.Domain.AggregateRoots;
-using SysLog.Domain.Models;
 using SysLog.Public.Models;
+using OneForAll.Core.Extension;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -14,6 +9,11 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.IdentityModel.Tokens;
+using OneForAll.Core.OAuth;
+using SysLog.Application.Interfaces;
+using SysLog.Host.Models;
+using SysLog.Domain.Models;
 
 namespace SysLog.Host.Filters
 {
@@ -41,9 +41,13 @@ namespace SysLog.Host.Filters
             _stopWatch.Restart();
 
             var request = context.Request;
-            var loginUser = GetLoginUser(context);
             var descriptor = context.GetEndpoint()?.Metadata.GetMetadata<ControllerActionDescriptor>();
 
+            if (descriptor == null)
+                return;
+
+            var loginUser = GetLoginUser(context);
+            var userAgent = request.Headers["User-Agent"];
             var data = new SysApiLogForm()
             {
                 MoudleName = _authConfig.ClientName,
@@ -54,11 +58,11 @@ namespace SysLog.Host.Filters
                 Host = request.Host.ToString(),
                 Url = request.Path.ToString(),
                 Method = request.Method.ToUpper(),
-                ContentType = request.ContentType,
-                UserAgent = request.Headers["User-Agent"],
+                ContentType = request.ContentType ?? "application/json",
+                UserAgent = userAgent.IsNullOrEmpty() ? "无" : userAgent.ToString(),
                 IPAddress = request.HttpContext.Connection.RemoteIpAddress.ToString(),
-                Action = descriptor == null ? "" : descriptor.ActionName,
-                Controller = descriptor == null ? "" : descriptor.ControllerName
+                Action = descriptor.ActionName,
+                Controller = descriptor.ControllerName
             };
 
             data.RequestBody = await GetRequestBody(context.Request);
@@ -72,8 +76,7 @@ namespace SysLog.Host.Filters
                 data.TimeSpan = _stopWatch.Elapsed.ToString();
                 data.StatusCode = context.Response.StatusCode.ToString();
 
-                if (data.CreatorId != Guid.Empty)
-                    _service.AddAsync(data);
+                _service.AddAsync(data);
 
                 return Task.CompletedTask;
             }); ;
@@ -147,7 +150,7 @@ namespace SysLog.Host.Filters
             return new LoginUser()
             {
                 Id = userId == null ? Guid.Empty : new Guid(userId.Value),
-                Name = name == null ? "" : name?.Value,
+                Name = name == null ? "无" : name?.Value,
                 SysTenantId = tenantId == null ? Guid.Empty : new Guid(tenantId?.Value),
                 IsDefault = role == null ? false : role.Value.Equals(UserRoleType.RULER)
             };

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using System;
 using System.Linq;
 using SysLog.Public.Models;
+using OneForAll.Core.OAuth;
 
 namespace SysLog.Host
 {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Base.Host.Models
+namespace SysLog.Host.Models
 {
     /// <summary>
     /// OAuth授权配置

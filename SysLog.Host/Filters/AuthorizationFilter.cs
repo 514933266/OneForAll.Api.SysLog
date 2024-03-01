@@ -10,7 +10,7 @@ using SysLog.Domain;
 using SysLog.Host.Models;
 using SysLog.Domain.Interfaces;
 using SysLog.HttpService.Interfaces;
-using Base.Host.Models;
+using SysLog.Host.Models;
 using OneForAll.Core.Extension;
 using OneForAll.Core.Security;
 using Microsoft.AspNetCore.Authorization;

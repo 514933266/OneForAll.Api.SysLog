@@ -38,7 +38,6 @@ namespace SysLog.Domain.Models
         /// <summary>
         /// 创建时间
         /// </summary>
-        [Required]
         public DateTime CreateTime { get; set; }
 
     }

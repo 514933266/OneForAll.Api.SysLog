@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using SysLog.HttpService.Models;
 using SysLog.HttpService.Interfaces;
 using SysLog.Public.Models;
+using OneForAll.Core.OAuth;
 
 namespace SysLog.HttpService
 {

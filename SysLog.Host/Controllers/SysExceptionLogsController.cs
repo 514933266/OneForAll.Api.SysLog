@@ -9,6 +9,7 @@ using SysLog.Public.Models;
 using SysLog.Application.Dtos;
 using SysLog.Application.Interfaces;
 using SysLog.Host.Filters;
+using OneForAll.Core.OAuth;
 
 namespace SysLog.Host.Controllers
 {
@@ -16,7 +17,6 @@ namespace SysLog.Host.Controllers
 	/// 异常日志
 	/// </summary>
 	[Route("api/[controller]")]
-	[Authorize(Roles = UserRoleType.ADMIN)]
 	public class SysExceptionLogsController : BaseController
 	{
 		private readonly ISysExceptionLogService _service;
