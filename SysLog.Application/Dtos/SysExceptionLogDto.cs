@@ -14,11 +14,6 @@ namespace SysLog.Application.Dtos
         public Guid Id { get; set; }
 
         /// <summary>
-        /// 租户id
-        /// </summary>
-        public Guid TenantId { get; set; }
-
-        /// <summary>
         /// 所属模块名称
         /// </summary>
         public string MoudleName { get; set; }

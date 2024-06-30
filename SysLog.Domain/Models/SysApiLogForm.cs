@@ -85,7 +85,7 @@ namespace SysLog.Domain.Models
         /// <summary>
         /// 完整的浏览器信息
         /// </summary>
-        [StringLength(300)]
+        [StringLength(500)]
         public string UserAgent { get; set; }
 
         /// <summary>

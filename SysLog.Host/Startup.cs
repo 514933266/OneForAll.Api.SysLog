@@ -116,31 +116,6 @@ namespace SysLog.Host
             });
             #endregion
 
-            #region Quartz
-
-            var quartzConfig = new QuartzScheduleJobConfig();
-            Configuration.GetSection(QUARTZ).Bind(quartzConfig);
-            // 注册QuartzJobs目录下的定时任务
-            if (quartzConfig != null)
-            {
-                services.AddSingleton(quartzConfig);
-                services.AddSingleton<IJobFactory, ScheduleJobFactory>();
-                services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();
-                services.AddHostedService<QuartzJobHostService>();
-                var jobNamespace = BASE_HOST.Append(".QuartzJobs");
-                quartzConfig.ScheduleJobs.ForEach(e =>
-                {
-                    var typeName = jobNamespace + "." + e.TypeName;
-                    var jobType = Assembly.Load(BASE_HOST).GetType(typeName);
-                    if (jobType != null)
-                    {
-                        e.JobType = jobType;
-                        services.AddSingleton(e.JobType);
-                    }
-                });
-            }
-            #endregion
-
             #region Http
 
             var serviceConfig = new HttpServiceConfig();
@@ -183,21 +158,11 @@ namespace SysLog.Host
 
             #region DI
 
-            services.AddDbContext<OneForAllDbContext>(options =>
-                options.UseSqlServer(Configuration["ConnectionStrings:Default"]));
             services.AddSingleton<IUploader, Uploader>();
             services.AddScoped<ITenantProvider, TenantProvider>();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddSingleton<HttpServiceConfig>();
             services.AddSingleton(authConfig);
-            #endregion
-
-            #region Redis
-            services.AddStackExchangeRedisCache(options =>
-            {
-                options.Configuration = Configuration["Redis:ConnectionString"];
-                options.InstanceName = Configuration["Redis:InstanceName"];
-            });
             #endregion
 
             #region Mvc
@@ -214,28 +179,67 @@ namespace SysLog.Host
                 options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
             });
             #endregion
+
+            #region Redis
+            services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = Configuration["Redis:ConnectionString"];
+                options.InstanceName = Configuration["Redis:InstanceName"];
+            });
+            #endregion
+
+            #region Quartz
+
+            var quartzConfig = new QuartzScheduleJobConfig();
+            Configuration.GetSection(QUARTZ).Bind(quartzConfig);
+            // 注册QuartzJobs目录下的定时任务
+            if (quartzConfig != null)
+            {
+                services.AddSingleton(quartzConfig);
+                services.AddSingleton<IJobFactory, ScheduleJobFactory>();
+                services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();
+                services.AddHostedService<QuartzJobHostService>();
+                var jobNamespace = BASE_HOST.Append(".QuartzJobs");
+                quartzConfig.ScheduleJobs.ForEach(e =>
+                {
+                    var typeName = jobNamespace + "." + e.TypeName;
+                    var jobType = Assembly.Load(BASE_HOST).GetType(typeName);
+                    if (jobType != null)
+                    {
+                        e.JobType = jobType;
+                        services.AddSingleton(e.JobType);
+                    }
+                });
+            }
+            #endregion
         }
 
         public void ConfigureContainer(ContainerBuilder builder)
         {
-            // Http
+            // Http数据服务
             builder.RegisterAssemblyTypes(Assembly.Load(HTTP_SERVICE))
                .Where(t => t.Name.EndsWith("Service"))
                .AsImplementedInterfaces();
 
-            // 基础
-            builder.RegisterGeneric(typeof(Repository<>))
-                .As(typeof(IEFCoreRepository<>));
-
+            // 应用层
             builder.RegisterAssemblyTypes(Assembly.Load(BASE_APPLICATION))
                 .Where(t => t.Name.EndsWith("Service"))
                 .AsImplementedInterfaces();
 
+            // 领域层
             builder.RegisterAssemblyTypes(Assembly.Load(BASE_DOMAIN))
                 .Where(t => t.Name.EndsWith("Manager"))
                 .AsImplementedInterfaces();
 
-            builder.RegisterType(typeof(OneForAllDbContext)).Named<DbContext>("OneForAllDbContext");
+            // 仓储层
+            builder.Register(p =>
+            {
+                var optionBuilder = new DbContextOptionsBuilder<OneForAllDbContext>();
+                optionBuilder.UseSqlServer(Configuration["ConnectionStrings:Default"]);
+                return optionBuilder.Options;
+            }).AsSelf();
+
+            builder.RegisterType<OneForAllDbContext>().Named<DbContext>("OneForAllDbContext");
             builder.RegisterAssemblyTypes(Assembly.Load(BASE_REPOSITORY))
                .Where(t => t.Name.EndsWith("Repository"))
                .WithParameter(ResolvedParameter.ForNamed<DbContext>("OneForAllDbContext"))
@@ -265,7 +269,7 @@ namespace SysLog.Host
                 RequestPath = new PathString("/resources"),
                 OnPrepareResponse = (c) =>
                 {
-                    c.Context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
+                    c.Context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
                 }
             });
 

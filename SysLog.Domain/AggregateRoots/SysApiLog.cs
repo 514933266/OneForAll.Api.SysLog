@@ -95,7 +95,7 @@ namespace SysLog.Domain.AggregateRoots
         /// 完整的浏览器信息
         /// </summary>
         [Required]
-        [StringLength(300)]
+        [StringLength(500)]
         public string UserAgent { get; set; } = "";
 
         /// <summary>
