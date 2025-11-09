@@ -68,19 +68,19 @@ namespace SysLog.Host.Filters
             // 初始化日志实体
             var data = new SysApiLogForm()
             {
-                ModuleName = _authConfig.ClientName,       // 模块名称（来自配置）
-                ModuleCode = _authConfig.ClientCode,       // 模块编码
-                CreatorId = loginUser.Id.ToString(),       // 用户 ID
-                CreatorName = loginUser.Name,              // 用户名
-                TenantId = loginUser.SysTenantId.ToString(),// 租户 ID
-                Host = context.Request.Host.ToString(),    // 请求主机
-                Url = context.Request.Path.ToString(),     // 请求路径
-                Method = context.Request.Method.ToUpper(), // HTTP 方法
-                ContentType = context.Request.ContentType ?? "application/json", // 内容类型
+                ModuleName = _authConfig.ClientName,
+                ModuleCode = _authConfig.ClientCode,
+                CreatorId = loginUser.Id.ToString(),
+                CreatorName = loginUser.Name,
+                TenantId = loginUser.SysTenantId.ToString(),
+                Host = context.Request.Host.ToString(),
+                Url = context.Request.Path.ToString(),
+                Method = context.Request.Method.ToUpper(),
+                ContentType = context.Request.ContentType ?? "application/json",
                 UserAgent = string.IsNullOrEmpty(userAgent) ? "无" : userAgent.ToString(),
-                IPAddress = context.Connection.RemoteIpAddress?.ToString() ?? "未知", // 客户端 IP
-                Action = descriptor.ActionName,            // 动作方法名
-                Controller = descriptor.ControllerName     // 控制器名
+                IPAddress = context.Connection.RemoteIpAddress?.ToString() ?? "未知",
+                Action = descriptor.ActionName,
+                Controller = descriptor.ControllerName
             };
 
             // 异步读取请求体内容（如 POST/PUT 的 JSON 数据）
@@ -96,8 +96,7 @@ namespace SysLog.Host.Filters
                 data.TimeSpan = _stopWatch.Elapsed.ToString(@"hh\:mm\:ss\.fff"); // 格式化为可读时间
                 data.StatusCode = context.Response.StatusCode.ToString();
 
-                // 异步保存日志（注意：OnCompleted 中应避免长时间阻塞）
-                await _service.AddAsync(data);
+                _service.AddAsync(data);
             });
         }
 
