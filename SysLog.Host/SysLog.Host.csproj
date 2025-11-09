@@ -1,0 +1,87 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <LangVersion>7.1</LangVersion>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+    <UserSecretsId>f7309c23-55d9-4356-8ace-67f21772f6f3</UserSecretsId>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile></DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="App_Start\**" />
+    <Compile Remove="Commom\**" />
+    <Compile Remove="Controllers\OA\**" />
+    <Compile Remove="Controllers\PMC\**" />
+    <Compile Remove="Images\**" />
+    <Content Remove="App_Start\**" />
+    <Content Remove="Commom\**" />
+    <Content Remove="Controllers\OA\**" />
+    <Content Remove="Controllers\PMC\**" />
+    <Content Remove="Images\**" />
+    <EmbeddedResource Remove="App_Start\**" />
+    <EmbeddedResource Remove="Commom\**" />
+    <EmbeddedResource Remove="Controllers\OA\**" />
+    <EmbeddedResource Remove="Controllers\PMC\**" />
+    <EmbeddedResource Remove="Images\**" />
+    <None Remove="App_Start\**" />
+    <None Remove="Commom\**" />
+    <None Remove="Controllers\OA\**" />
+    <None Remove="Controllers\PMC\**" />
+    <None Remove="Images\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Controllers\DepartmentsController.cs" />
+    <Compile Remove="Controllers\OrgUsersController.cs" />
+    <Compile Remove="Controllers\UsergroupsController.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Autofac" Version="8.4.0" />
+    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
+    <PackageReference Include="Autofac.Extras.DynamicProxy" Version="7.1.0" />
+    <PackageReference Include="AutoMapper" Version="15.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.36" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.36" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.36" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.36" />
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="6.0.36" />
+    <PackageReference Include="OneForAll.Core" Version="1.0.99" />
+    <PackageReference Include="OneForAll.File" Version="1.0.100" />
+    <PackageReference Include="Quartz" Version="3.15.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\" />
+    <Folder Include="upload\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SysLog.Application\SysLog.Application.csproj" />
+    <ProjectReference Include="..\SysLog.Domain\SysLog.Domain.csproj" />
+    <ProjectReference Include="..\SysLog.HttpService\SysLog.HttpService.csproj" />
+    <ProjectReference Include="..\SysLog.Public\SysLog.Public.csproj" />
+    <ProjectReference Include="..\SysLog.Repository\SysLog.Repository.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="OneForAll.Core">
+      <HintPath>..\..\..\..\dll\netcoreapp3.0\OneForAll.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="OneForAll.EFCore">
+      <HintPath>..\..\..\..\dll\netcoreapp3.0\OneForAll.EFCore.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ProjectExtensions><VisualStudio><UserProperties appsettings_1json__JSONSchema="" /></VisualStudio></ProjectExtensions>
+
+</Project>

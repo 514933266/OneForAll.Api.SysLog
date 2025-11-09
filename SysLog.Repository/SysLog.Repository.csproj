@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <LangVersion>7.1</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="15.1.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.36" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.36" />
+    <PackageReference Include="OneForAll.Core" Version="1.0.99" />
+    <PackageReference Include="OneForAll.EFCore" Version="1.0.99" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SysLog.Domain\SysLog.Domain.csproj" />
+  </ItemGroup>
+
+</Project>
