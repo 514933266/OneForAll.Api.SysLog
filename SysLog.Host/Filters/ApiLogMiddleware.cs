@@ -55,10 +55,6 @@ namespace SysLog.Host.Filters
             // 尝试从当前终结点（Endpoint）中获取控制器和动作元数据
             var descriptor = context.GetEndpoint()?.Metadata.GetMetadata<ControllerActionDescriptor>();
 
-            // 如果不是 MVC 控制器请求（如静态文件、健康检查等），则跳过日志记录
-            if (descriptor == null)
-                return;
-
             // 获取当前登录用户信息（从 Claims 中解析）
             var loginUser = GetLoginUser(context);
 
@@ -68,19 +64,19 @@ namespace SysLog.Host.Filters
             // 初始化日志实体
             var data = new SysApiLogForm()
             {
-                ModuleName = _authConfig.ClientName,       // 模块名称（来自配置）
-                ModuleCode = _authConfig.ClientCode,       // 模块编码
-                CreatorId = loginUser.Id.ToString(),       // 用户 ID
-                CreatorName = loginUser.Name,              // 用户名
-                TenantId = loginUser.SysTenantId.ToString(),// 租户 ID
-                Host = context.Request.Host.ToString(),    // 请求主机
-                Url = context.Request.Path.ToString(),     // 请求路径
-                Method = context.Request.Method.ToUpper(), // HTTP 方法
-                ContentType = context.Request.ContentType ?? "application/json", // 内容类型
+                ModuleName = _authConfig.ClientName,
+                ModuleCode = _authConfig.ClientCode,
+                CreatorId = loginUser.Id.ToString(),
+                CreatorName = loginUser.Name,
+                TenantId = loginUser.SysTenantId.ToString(),
+                Host = context.Request.Host.ToString(),
+                Url = context.Request.Path.ToString(),
+                Method = context.Request.Method.ToUpper(),
+                ContentType = context.Request.ContentType ?? "application/json",
                 UserAgent = string.IsNullOrEmpty(userAgent) ? "无" : userAgent.ToString(),
-                IPAddress = context.Connection.RemoteIpAddress?.ToString() ?? "未知", // 客户端 IP
-                Action = descriptor.ActionName,            // 动作方法名
-                Controller = descriptor.ControllerName     // 控制器名
+                IPAddress = context.Connection.RemoteIpAddress?.ToString() ?? "未知",
+                Action = descriptor?.ActionName ?? "无",
+                Controller = descriptor?.ControllerName ?? "无"
             };
 
             // 异步读取请求体内容（如 POST/PUT 的 JSON 数据）
@@ -97,7 +93,7 @@ namespace SysLog.Host.Filters
                 data.StatusCode = context.Response.StatusCode.ToString();
 
                 // 异步保存日志（注意：OnCompleted 中应避免长时间阻塞）
-                await _service.AddAsync(data);
+                _service.AddAsync(data);
             });
         }
 
