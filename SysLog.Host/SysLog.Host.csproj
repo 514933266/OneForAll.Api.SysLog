@@ -73,15 +73,6 @@
     <ProjectReference Include="..\SysLog.Repository\SysLog.Repository.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="OneForAll.Core">
-      <HintPath>..\..\..\..\dll\netcoreapp3.0\OneForAll.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="OneForAll.EFCore">
-      <HintPath>..\..\..\..\dll\netcoreapp3.0\OneForAll.EFCore.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
   <ProjectExtensions><VisualStudio><UserProperties appsettings_1json__JSONSchema="" /></VisualStudio></ProjectExtensions>
 
 </Project>
