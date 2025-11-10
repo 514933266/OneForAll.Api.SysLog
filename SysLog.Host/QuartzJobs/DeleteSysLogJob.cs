@@ -14,7 +14,7 @@ namespace SysLog.Host.QuartzJobs
     /// <summary>
     /// 删除日志
     /// </summary>
-    public class DeleteLogJob : IJob
+    public class DeleteSysLogJob : IJob
     {
         private readonly AuthConfig _config;
         private readonly ISysApiLogRepository _apiRepository;
@@ -25,7 +25,7 @@ namespace SysLog.Host.QuartzJobs
 
         private readonly IScheduleJobHttpService _jobHttpService;
         private readonly ISysGlobalExceptionLogService _gexService;
-        public DeleteLogJob(
+        public DeleteSysLogJob(
             AuthConfig config,
             ISysApiLogRepository apiRepository,
             ISysExceptionLogRepository exRepository,
@@ -96,7 +96,7 @@ namespace SysLog.Host.QuartzJobs
         // 添加日志
         private async Task AddLogAsync(string log)
         {
-            await _jobHttpService.LogAsync(_config.ClientCode, typeof(DeleteLogJob).Name, log);
+            await _jobHttpService.LogAsync(_config.ClientCode, typeof(DeleteSysLogJob).Name, log);
         }
     }
 }

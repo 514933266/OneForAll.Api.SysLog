@@ -26,7 +26,7 @@ namespace SysLog.Host.Filters
         private readonly AuthConfig _authConfig;
 
         private readonly ISysApiLogService _service;
-        
+
         /// <summary>
         /// 构造函数，通过依赖注入初始化中间件所需的服务和配置。
         /// </summary>
@@ -55,10 +55,6 @@ namespace SysLog.Host.Filters
             // 尝试从当前终结点（Endpoint）中获取控制器和动作元数据
             var descriptor = context.GetEndpoint()?.Metadata.GetMetadata<ControllerActionDescriptor>();
 
-            // 如果不是 MVC 控制器请求（如静态文件、健康检查等），则跳过日志记录
-            if (descriptor == null)
-                return;
-
             // 获取当前登录用户信息（从 Claims 中解析）
             var loginUser = GetLoginUser(context);
 
@@ -79,8 +75,8 @@ namespace SysLog.Host.Filters
                 ContentType = context.Request.ContentType ?? "application/json",
                 UserAgent = string.IsNullOrEmpty(userAgent) ? "无" : userAgent.ToString(),
                 IPAddress = context.Connection.RemoteIpAddress?.ToString() ?? "未知",
-                Action = descriptor.ActionName,
-                Controller = descriptor.ControllerName
+                Action = descriptor?.ActionName ?? "无",
+                Controller = descriptor?.ControllerName ?? "无"
             };
 
             // 异步读取请求体内容（如 POST/PUT 的 JSON 数据）
@@ -96,6 +92,7 @@ namespace SysLog.Host.Filters
                 data.TimeSpan = _stopWatch.Elapsed.ToString(@"hh\:mm\:ss\.fff"); // 格式化为可读时间
                 data.StatusCode = context.Response.StatusCode.ToString();
 
+                // 异步保存日志（注意：OnCompleted 中应避免长时间阻塞）
                 _service.AddAsync(data);
             });
         }
