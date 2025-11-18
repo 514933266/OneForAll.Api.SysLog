@@ -51,8 +51,6 @@ namespace SysLog.Host
             Configuration = configuration;
         }
 
-
-
         public void ConfigureServices(IServiceCollection services)
         {
             #region Cors
@@ -115,8 +113,7 @@ namespace SysLog.Host
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateAudience = true,
-                    ValidateIssuer = true,
-                    RoleClaimType = ClaimTypes.Role
+                    ValidateIssuer = true
                     // 其他参数由 Authority 自动获取（通过 .well-known/openid-configuration）
                 };
             });
@@ -246,33 +243,55 @@ namespace SysLog.Host
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            // 如果当前环境是开发环境，则启用开发者异常页面，便于调试错误
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
 
+            // 创建用于文件上传的目录（upload），如果不存在则自动创建
             DirectoryHelper.Create(Path.Combine(Directory.GetCurrentDirectory(), @"upload"));
+
+            // 启用静态文件服务，指定特定目录和访问路径
             app.UseStaticFiles(new StaticFileOptions()
             {
+                // 指定静态文件的物理路径为项目根目录下的 "upload" 文件夹
                 FileProvider = new PhysicalFileProvider(
-                Path.Combine(Directory.GetCurrentDirectory(), @"upload")),
+                    Path.Combine(Directory.GetCurrentDirectory(), @"upload")),
+                // 设置该目录的访问路径为 "/resources"
                 RequestPath = new PathString("/resources"),
-                OnPrepareResponse = (c) =>
+                // 在响应前添加响应头，允许跨域访问（CORS）
+                OnPrepareResponse = (context) =>
                 {
-                    c.Context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+                    context.Context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
                 }
             });
 
-            app.UseCors(CORS);
+            // 启用默认文件支持（例如访问目录时自动查找 index.html 等默认页）
+            app.UseDefaultFiles();
 
+            // 启用路由中间件，为后续的端点映射做准备
             app.UseRouting();
 
+            // 启用跨域策略（CORS），策略名称为 CORS（需在 ConfigureServices 中定义）
+            app.UseCors(CORS);
+
+            // 启用身份认证中间件
             app.UseAuthentication();
+
+            // 启用授权中间件（检查用户是否有权限访问资源）
             app.UseAuthorization();
 
+            // 使用自定义中间件：全局异常处理
+            //app.UseMiddleware<GlobalExceptionMiddleware>();
+
+            // 使用自定义中间件：API 请求日志记录
+            app.UseMiddleware<ApiLogMiddleware>();
+
+            // 配置终结点路由，将控制器（Controllers）映射到请求管道
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapControllers();
+                endpoints.MapControllers(); // 映射所有控制器的路由
             });
         }
     }

@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using OneForAll.Core;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using SysLog.Domain.Models;
 using SysLog.Public.Models;
 using SysLog.Application.Dtos;
 using SysLog.Application.Interfaces;

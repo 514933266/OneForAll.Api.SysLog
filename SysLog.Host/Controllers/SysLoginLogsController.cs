@@ -1,19 +1,22 @@
-using System;
-using System.Threading.Tasks;
-using OneForAll.Core;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SysLog.Domain.Models;
+using OneForAll.Core;
+using OneForAll.Core.OAuth;
 using SysLog.Application.Dtos;
 using SysLog.Application.Interfaces;
-using OneForAll.Core.OAuth;
+using SysLog.Domain.Models;
+using SysLog.Public.Models;
+using System;
+using System.Threading.Tasks;
 
 namespace SysLog.Host.Controllers
 {
-	/// <summary>
-	/// 登录日志
-	/// </summary>
-	[Route("api/[controller]")]
-	public class SysLoginLogsController : BaseController
+    /// <summary>
+    /// 登录日志
+    /// </summary>
+    [Route("api/[controller]")]
+    [Authorize(Roles = UserRoleType.Ruler)]
+    public class SysLoginLogsController : BaseController
 	{
 		private readonly ISysLoginLogService _service;
 
@@ -50,6 +53,7 @@ namespace SysLog.Host.Controllers
 		/// 添加
 		/// </summary>
 		[HttpPost]
+        [AllowAnonymous]
         public async Task<BaseMessage> AddAsync([FromBody] SysLoginLogForm entity)
 		{
 			var msg = new BaseMessage();

@@ -9,6 +9,7 @@ using System.Net.Http.Formatting;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using OneForAll.Core.Extension;
 
 namespace SysLog.HttpService
 {
@@ -37,7 +38,7 @@ namespace SysLog.HttpService
             var client = GetHttpClient(_config.SysJob);
             if (client != null && client.BaseAddress != null)
             {
-                var url = $"{client.BaseAddress}/api/ScheduleJobs";
+                var url = $"{client.BaseAddress}api/ScheduleJobs";
                 var response = await client.PostAsync(url, request, new JsonMediaTypeFormatter());
                 var msg = await response.Content.ReadAsAsync<BaseMessage>();
                 return msg.ErrType;
@@ -56,7 +57,7 @@ namespace SysLog.HttpService
             var client = GetHttpClient(_config.SysJob);
             if (client != null && client.BaseAddress != null)
             {
-                var url = $"{client.BaseAddress}/api/ScheduleJobs/{appId}/{taskName}";
+                var url = $"{client.BaseAddress}api/ScheduleJobs/{appId}/{taskName}";
                 await client.DeleteAsync(url);
             }
         }
@@ -73,7 +74,7 @@ namespace SysLog.HttpService
             var client = GetHttpClient(_config.SysJob);
             if (client != null && client.BaseAddress != null)
             {
-                var url = $"{client.BaseAddress}/api/ScheduleJobs/{appId}/{taskName}/Logs";
+                var url = $"{client.BaseAddress}api/ScheduleJobs/{appId}/{taskName}/Logs";
                 var response = await client.PostAsync(url, log, new JsonMediaTypeFormatter());
                 var msg = await response.Content.ReadAsAsync<BaseMessage>();
                 return msg.ErrType;

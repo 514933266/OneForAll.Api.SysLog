@@ -92,8 +92,15 @@ namespace SysLog.Host.Filters
                 data.TimeSpan = _stopWatch.Elapsed.ToString(@"hh\:mm\:ss\.fff"); // 格式化为可读时间
                 data.StatusCode = context.Response.StatusCode.ToString();
 
-                // 异步保存日志（注意：OnCompleted 中应避免长时间阻塞）
-                _service.AddAsync(data);
+                try
+                {
+                    // 异步保存日志（注意：OnCompleted 中应避免长时间阻塞）
+                    await _service.AddAsync(data);
+                }
+                catch
+                {
+                    // 忽略
+                }
             });
         }
 
