@@ -34,5 +34,6 @@ namespace SysLog.Host.Models
         /// 授权服务地址
         /// </summary>
         public string Authority { get; set; }
+
     }
 }

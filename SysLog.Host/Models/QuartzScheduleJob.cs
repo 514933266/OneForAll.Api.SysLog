@@ -26,5 +26,10 @@ namespace SysLog.Host.Models
         /// 备注
         /// </summary>
         public string Remark { get; set; }
+
+        /// <summary>
+        /// 传递参数
+        /// </summary>
+        public string Data { get; set; }
     }
 }

@@ -82,7 +82,7 @@ namespace SysLog.Host.Providers
                         ModuleName = _authConfig.ClientName,
                         ModuleCode = _authConfig.ClientCode,
                         Name = "定时任务注册异常",
-                        Content = ex.StackTrace ?? "无堆栈信息"
+                        Content = ex.Message ?? "无堆栈信息"
                     });
                 }
 
@@ -116,6 +116,7 @@ namespace SysLog.Host.Providers
                 .Create(schedule.JobType)
                 .WithIdentity(schedule.JobType.FullName)
                 .WithDescription(schedule.JobType.Name)
+                .UsingJobData("Data", schedule.Data)
                 .Build();
         }
 

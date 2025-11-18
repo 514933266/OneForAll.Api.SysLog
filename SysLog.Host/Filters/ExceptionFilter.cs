@@ -66,20 +66,27 @@ namespace SysLog.Host.Filters
                 Content = result.ToJson()
             };
 
-            // 获取发生异常的控制器和 Action 名称
-            var controller = context.ActionDescriptor.RouteValues["controller"];
-            var action = context.ActionDescriptor.RouteValues["action"];
-
-            // 异步记录异常日志
-            await _logService.AddAsync(new SysExceptionLogForm()
+            try
             {
-                ModuleName = _authConfig.ClientName,
-                ModuleCode = _authConfig.ClientCode,
-                Controller = controller ?? "Unknown",
-                Action = action ?? "Unknown",
-                Name = context.Exception.Message ?? "无异常信息",
-                Content = context.Exception.StackTrace ?? "无堆栈信息"
-            });
+                // 获取发生异常的控制器和 Action 名称
+                var controller = context.ActionDescriptor.RouteValues["controller"];
+                var action = context.ActionDescriptor.RouteValues["action"];
+
+                // 异步记录异常日志
+                await _logService.AddAsync(new SysExceptionLogForm()
+                {
+                    ModuleName = _authConfig.ClientName,
+                    ModuleCode = _authConfig.ClientCode,
+                    Controller = controller ?? "Unknown",
+                    Action = action ?? "Unknown",
+                    Name = context.Exception.Message ?? "无异常信息",
+                    Content = context.Exception.StackTrace ?? "无堆栈信息"
+                });
+            }
+            catch
+            {
+                // 忽略
+            }
 
             // 标记异常已处理，防止后续中间件再次处理
             context.ExceptionHandled = true;

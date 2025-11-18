@@ -1,18 +1,21 @@
-﻿using System;
-using System.Threading.Tasks;
-using OneForAll.Core;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SysLog.Domain.Models;
+using OneForAll.Core;
+using OneForAll.Core.OAuth;
 using SysLog.Application.Dtos;
 using SysLog.Application.Interfaces;
-using OneForAll.Core.OAuth;
+using SysLog.Domain.Models;
+using SysLog.Public.Models;
+using System;
+using System.Threading.Tasks;
 
 namespace SysLog.Host.Controllers
 {
-	/// <summary>
-	/// 系统日志信息
-	/// </summary>
-	[Route("api/[controller]")]
+    /// <summary>
+    /// 系统日志信息
+    /// </summary>
+    [Route("api/[controller]")]
+    [Authorize(Roles = UserRoleType.Ruler)]
     public class SysApiLogsController : BaseController
 	{
 		private readonly ISysApiLogService _service;
@@ -54,6 +57,7 @@ namespace SysLog.Host.Controllers
 		/// 添加
 		/// </summary>
 		[HttpPost]
+		[AllowAnonymous]
         public async Task<BaseMessage> AddAsync([FromBody] SysApiLogForm entity)
 		{
 			var msg = new BaseMessage();
