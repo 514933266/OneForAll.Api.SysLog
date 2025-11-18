@@ -69,7 +69,7 @@ namespace SysLog.HttpService
                     Controller = controller,
                     Action = action
                 };
-                var url = $"{client.BaseAddress}/api/SysPermissionCheck";
+                var url = $"{client.BaseAddress}api/SysPermissionCheck";
                 var result = await client.PostAsync(url, postData, new JsonMediaTypeFormatter());
                 return await result.Content.ReadAsAsync<BaseMessage>();
             }

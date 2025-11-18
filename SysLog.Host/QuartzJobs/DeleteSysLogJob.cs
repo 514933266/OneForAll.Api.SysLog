@@ -7,7 +7,7 @@ using SysLog.Domain.Repositorys;
 using System.Linq;
 using SysLog.Application.Interfaces;
 using SysLog.Domain.Models;
-using NPOI.SS.Formula.Functions;
+using Newtonsoft.Json;
 
 namespace SysLog.Host.QuartzJobs
 {
@@ -49,35 +49,40 @@ namespace SysLog.Host.QuartzJobs
         {
             try
             {
-                var apis = await _apiRepository.GetListAsync(w => w.CreateTime < DateTime.UtcNow.AddDays(-7));
+                var data = context.JobDetail.JobDataMap.GetString("Data");
+                var config = JsonConvert.DeserializeObject<DeleteSysLogJobData>(data);
+                if (config == null)
+                    return;
+
+                var apis = await _apiRepository.GetListAsync(w => w.CreateTime < DateTime.UtcNow.AddDays(config.ApiLogDays));
                 if (apis.Any())
                 {
                     var num = await _apiRepository.DeleteRangeAsync(apis);
-                    await AddLogAsync($"删除Api日志（7天前）任务执行完成，删除{num}条");
+                    await AddLogAsync($"删除Api日志（{config.ApiLogDays}天前）任务执行完成，删除{num}条");
                 }
-                var exs = await _exRepository.GetListAsync(w => w.CreateTime < DateTime.UtcNow.AddMonths(-1));
+                var exs = await _exRepository.GetListAsync(w => w.CreateTime < DateTime.UtcNow.AddDays(config.ExceptionLogDays));
                 if (exs.Any())
                 {
                     var num = await _exRepository.DeleteRangeAsync(exs);
-                    await AddLogAsync($"删除异常日志（1个月前）任务执行完成，删除{num}条");
+                    await AddLogAsync($"删除异常日志（{config.ExceptionLogDays}天前）任务执行完成，删除{num}条");
                 }
-                var gexs = await _gexRepository.GetListAsync(w => w.CreateTime < DateTime.UtcNow.AddMonths(-1));
+                var gexs = await _gexRepository.GetListAsync(w => w.CreateTime < DateTime.UtcNow.AddDays(config.GlobalExceptionLogDays));
                 if (gexs.Any())
                 {
                     var num = await _gexRepository.DeleteRangeAsync(gexs);
-                    await AddLogAsync($"删除全局异常日志（1个月前）任务执行完成，删除{num}条");
+                    await AddLogAsync($"删除全局异常日志（{config.GlobalExceptionLogDays}天前）任务执行完成，删除{num}条");
                 }
-                var logs = await _loginRepository.GetListAsync(w => w.CreateTime < DateTime.UtcNow.AddMonths(-1));
+                var logs = await _loginRepository.GetListAsync(w => w.CreateTime < DateTime.UtcNow.AddDays(config.LoginLogDays));
                 if (logs.Any())
                 {
                     var num = await _loginRepository.DeleteRangeAsync(logs);
-                    await AddLogAsync($"删除登录日志（1个月前）任务执行完成，删除{num}条");
+                    await AddLogAsync($"删除登录日志（{config.LoginLogDays}天前）任务执行完成，删除{num}条");
                 }
-                var operas = await _operaRepository.GetListAsync(w => w.CreateTime < DateTime.UtcNow.AddMonths(-1));
+                var operas = await _operaRepository.GetListAsync(w => w.CreateTime < DateTime.UtcNow.AddDays(config.OperationLogDays));
                 if (operas.Any())
                 {
                     var num = await _operaRepository.DeleteRangeAsync(operas);
-                    await AddLogAsync($"删除操作日志（1个月前）任务执行完成，删除{num}条");
+                    await AddLogAsync($"删除操作日志（{config.OperationLogDays}天前）任务执行完成，删除{num}条");
                 }
                 await AddLogAsync($"删除日志任务执行完成");
             }
@@ -97,6 +102,37 @@ namespace SysLog.Host.QuartzJobs
         private async Task AddLogAsync(string log)
         {
             await _jobHttpService.LogAsync(_config.ClientCode, typeof(DeleteSysLogJob).Name, log);
+        }
+
+        /// <summary>
+        /// 定时任务参数
+        /// </summary>
+        protected class DeleteSysLogJobData
+        {
+            /// <summary>
+            /// Api日志保留天数
+            /// </summary>
+            public int ApiLogDays { get; set; } = -3;
+
+            /// <summary>
+            /// 异常日志保留天数
+            /// </summary>
+            public int ExceptionLogDays { get; set; } = -7;
+
+            /// <summary>
+            /// 全局异常日志保留天数
+            /// </summary>
+            public int GlobalExceptionLogDays { get; set; } = -7;
+
+            /// <summary>
+            /// 登录日志保留天数
+            /// </summary>
+            public int LoginLogDays { get; set; } = -15;
+
+            /// <summary>
+            /// 操作日志保留天数
+            /// </summary>
+            public int OperationLogDays { get; set; } = -15;
         }
     }
 }
