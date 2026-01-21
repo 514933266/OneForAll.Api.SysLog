@@ -1,0 +1,138 @@
+﻿using SysLog.Host.Models;
+using Quartz;
+using SysLog.HttpService.Interfaces;
+using System.Threading.Tasks;
+using System;
+using SysLog.Domain.Repositorys;
+using System.Linq;
+using SysLog.Application.Interfaces;
+using SysLog.Domain.Models;
+using Newtonsoft.Json;
+
+namespace SysLog.Host.QuartzJobs
+{
+    /// <summary>
+    /// 删除日志
+    /// </summary>
+    public class DeleteSysLogJob : IJob
+    {
+        private readonly AuthConfig _config;
+        private readonly ISysApiLogRepository _apiRepository;
+        private readonly ISysExceptionLogRepository _exRepository;
+        private readonly ISysLoginLogRepository _loginRepository;
+        private readonly ISysOperationLogRepository _operaRepository;
+        private readonly ISysGlobalExceptionLogRepository _gexRepository;
+
+        private readonly IScheduleJobHttpService _jobHttpService;
+        private readonly ISysGlobalExceptionLogService _gexService;
+        public DeleteSysLogJob(
+            AuthConfig config,
+            ISysApiLogRepository apiRepository,
+            ISysExceptionLogRepository exRepository,
+            ISysLoginLogRepository loginRepository,
+            ISysOperationLogRepository operaRepository,
+            ISysGlobalExceptionLogRepository gexRepository,
+            IScheduleJobHttpService jobHttpService,
+            ISysGlobalExceptionLogService gexService)
+        {
+            _config = config;
+            _apiRepository = apiRepository;
+            _exRepository = exRepository;
+            _gexRepository = gexRepository;
+            _loginRepository = loginRepository;
+            _operaRepository = operaRepository;
+            _jobHttpService = jobHttpService;
+            _gexService = gexService;
+        }
+
+        public async Task Execute(IJobExecutionContext context)
+        {
+            try
+            {
+                var data = context.JobDetail.JobDataMap.GetString("Data");
+                var config = JsonConvert.DeserializeObject<DeleteSysLogJobData>(data);
+                if (config == null)
+                    return;
+
+                var apis = await _apiRepository.GetListDeletableAsync(DateTime.UtcNow.AddDays(config.ApiLogDays));
+                if (apis.Any())
+                {
+                    var num = await _apiRepository.DeleteRangeAsync(apis);
+                    await AddLogAsync($"删除Api日志（{config.ApiLogDays}天前）任务执行完成，删除{num}条");
+                }
+                var exs = await _exRepository.GetListDeletableAsync(DateTime.UtcNow.AddDays(config.ExceptionLogDays));
+                if (exs.Any())
+                {
+                    var num = await _exRepository.DeleteRangeAsync(exs);
+                    await AddLogAsync($"删除异常日志（{config.ExceptionLogDays}天前）任务执行完成，删除{num}条");
+                }
+                var gexs = await _gexRepository.GetListDeletableAsync(DateTime.UtcNow.AddDays(config.GlobalExceptionLogDays));
+                if (gexs.Any())
+                {
+                    var num = await _gexRepository.DeleteRangeAsync(gexs);
+                    await AddLogAsync($"删除全局异常日志（{config.GlobalExceptionLogDays}天前）任务执行完成，删除{num}条");
+                }
+                var logs = await _loginRepository.GetListDeletableAsync(DateTime.UtcNow.AddDays(config.LoginLogDays));
+                if (logs.Any())
+                {
+                    var num = await _loginRepository.DeleteRangeAsync(logs);
+                    await AddLogAsync($"删除登录日志（{config.LoginLogDays}天前）任务执行完成，删除{num}条");
+                }
+                var operas = await _operaRepository.GetListDeletableAsync(DateTime.UtcNow.AddDays(config.OperationLogDays));
+                if (operas.Any())
+                {
+                    var num = await _operaRepository.DeleteRangeAsync(operas);
+                    await AddLogAsync($"删除操作日志（{config.OperationLogDays}天前）任务执行完成，删除{num}条");
+                }
+                await AddLogAsync($"删除日志任务执行完成");
+            }
+            catch (Exception ex)
+            {
+                await _gexService.AddAsync(new SysGlobalExceptionLogForm
+                {
+                    ModuleName = _config.ClientName,
+                    ModuleCode = _config.ClientCode,
+                    Name = ex.Message,
+                    Content = ex.InnerException == null ? ex.StackTrace : ex.InnerException.StackTrace
+                });
+            }
+        }
+
+        // 添加日志
+        private async Task AddLogAsync(string log)
+        {
+            await _jobHttpService.LogAsync(_config.ClientCode, typeof(DeleteSysLogJob).Name, log);
+        }
+
+        /// <summary>
+        /// 定时任务参数
+        /// </summary>
+        protected class DeleteSysLogJobData
+        {
+            /// <summary>
+            /// Api日志保留天数
+            /// </summary>
+            public int ApiLogDays { get; set; } = -3;
+
+            /// <summary>
+            /// 异常日志保留天数
+            /// </summary>
+            public int ExceptionLogDays { get; set; } = -7;
+
+            /// <summary>
+            /// 全局异常日志保留天数
+            /// </summary>
+            public int GlobalExceptionLogDays { get; set; } = -7;
+
+            /// <summary>
+            /// 登录日志保留天数
+            /// </summary>
+            public int LoginLogDays { get; set; } = -15;
+
+            /// <summary>
+            /// 操作日志保留天数
+            /// </summary>
+            public int OperationLogDays { get; set; } = -15;
+        }
+    }
+}
