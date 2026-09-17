@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>系统日志中心</title>
+  <link rel="stylesheet" href="/lib/element-plus.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body, #app { height: 100%; }
+    body { font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Microsoft YaHei", Arial, sans-serif; background: #f0f2f5; }
+    .layout { height: 100%; }
+    .aside { background: #2f2f2f; }
+    .logo { height: 56px; line-height: 56px; text-align: center; color: #fff; font-size: 16px; font-weight: 600; background: #262626; white-space: nowrap; overflow: hidden; }
+    .aside .el-menu { border-right: none; --el-menu-hover-bg-color: #3a3a3a; --el-menu-active-color: #ffffff; }
+    .aside .el-menu-item.is-active { background-color: #1f1f1f !important; }
+    .aside .el-menu-item:hover { background-color: #3a3a3a !important; }
+    .header { background: #fff; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 4px rgba(0, 21, 41, .08); z-index: 10; }
+    .header-title { font-size: 16px; font-weight: 600; color: #303133; }
+    .main { padding: 16px; overflow-y: auto; }
+    .page-card { background: #fff; border-radius: 4px; padding: 16px; }
+    .search-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+    .search-bar .el-input { width: 200px; }
+    .table-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .pagination { display: flex; justify-content: flex-end; margin-top: 14px; }
+    .job-card { margin-bottom: 16px; }
+    .card-header { display: flex; align-items: center; justify-content: space-between; }
+    .card-body { color: #606266; font-size: 14px; line-height: 1.8; }
+    .card-body .cron { color: #909399; }
+    .card-actions { margin-top: 12px; }
+    .detail-content { white-space: pre-wrap; word-break: break-all; background: #f5f7fa; border-radius: 4px; padding: 10px; font-size: 13px; line-height: 1.6; color: #606266; max-height: 360px; overflow-y: auto; }
+    .detail-descriptions .el-descriptions__label { white-space: nowrap; }
+    .detail-descriptions .el-descriptions__content { word-break: break-all; }
+    .liveness-num { font-weight: 600; color: #303133; }
+    .liveness-bar { margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <el-container class="layout">
+      <el-aside width="200px" class="aside">
+        <div class="logo">系统日志中心</div>
+        <el-menu background-color="#2f2f2f" text-color="#cfd3dc" active-text-color="#ffffff" :default-active="activeMenu" @select="onMenuSelect">
+          <el-menu-item index="apiLogs"><el-icon><Monitor /></el-icon>API日志</el-menu-item>
+          <el-menu-item index="exceptionLogs"><el-icon><Warning /></el-icon>异常日志</el-menu-item>
+          <el-menu-item index="globalExceptionLogs"><el-icon><CircleClose /></el-icon>全局异常</el-menu-item>
+          <el-menu-item index="loginLogs"><el-icon><User /></el-icon>登录日志</el-menu-item>
+          <el-menu-item index="operationLogs"><el-icon><EditPen /></el-icon>操作日志</el-menu-item>
+          <el-menu-item index="liveness"><el-icon><Histogram /></el-icon>活跃度</el-menu-item>
+          <el-menu-item index="activity"><el-icon><OfficeBuilding /></el-icon>企业活动</el-menu-item>
+          <el-menu-item index="startups"><el-icon><VideoPlay /></el-icon>内置任务</el-menu-item>
+        </el-menu>
+      </el-aside>
+      <el-container>
+        <el-header class="header">
+          <span class="header-title">{{ pageTitle }}</span>
+        </el-header>
+        <el-main class="main">
+
+          <!-- API日志 -->
+          <div v-show="activeMenu === 'apiLogs'" class="page-card">
+            <div class="search-bar">
+              <el-date-picker v-model="apiLogQuery.timeRange" type="datetimerange" format="YYYY-MM-DD HH:mm:ss" :default-time="[new Date(2000, 0, 1, 0, 0, 0), new Date(2000, 0, 1, 23, 59, 59)]" range-separator="至" start-placeholder="开始时间" end-placeholder="结束时间" value-format="YYYY-MM-DD HH:mm:ss" style="width:400px;"></el-date-picker>
+              <el-input v-model="apiLogQuery.userName" placeholder="操作人" clearable @keyup.enter="loadApiLogs"></el-input>
+              <el-input v-model="apiLogQuery.controller" placeholder="控制器" clearable @keyup.enter="loadApiLogs"></el-input>
+              <el-input v-model="apiLogQuery.action" placeholder="方法" clearable @keyup.enter="loadApiLogs"></el-input>
+              <el-input v-model="apiLogQuery.url" placeholder="请求地址" clearable @keyup.enter="loadApiLogs"></el-input>
+              <el-input v-model="apiLogQuery.key" placeholder="关键字（模块名称/代码）" clearable @keyup.enter="loadApiLogs"></el-input>
+              <el-button type="primary" @click="loadApiLogs">查询</el-button>
+              <el-button @click="resetApiLogQuery">重置</el-button>
+            </div>
+            <el-table :data="apiLogs" v-loading="apiLogsLoading" border stripe>
+              <el-table-column prop="ModuleName" label="模块名称" min-width="120" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="ModuleCode" label="模块代码" min-width="140" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="Controller" label="控制器" min-width="130" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="Action" label="方法" min-width="100" show-overflow-tooltip></el-table-column>
+              <el-table-column label="请求方法" width="90">
+                <template #default="scope">
+                  <el-tag size="small" :type="methodType(scope.row.Method)">{{ scope.row.Method }}</el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column prop="Url" label="请求地址" min-width="220" show-overflow-tooltip></el-table-column>
+              <el-table-column label="状态码" width="85">
+                <template #default="scope">
+                  <el-tag size="small" :type="statusCodeType(scope.row.StatusCode)">{{ scope.row.StatusCode }}</el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column prop="IPAddress" label="IP地址" width="130" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="TimeSpan" label="耗时" width="90" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="CreatorName" label="操作人" width="110" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="CreateTime" label="创建时间" width="165">
+                <template #default="scope">{{ fmtTime(scope.row.CreateTime) }}</template>
+              </el-table-column>
+              <el-table-column label="操作" width="80" fixed="right">
+                <template #default="scope">
+                  <el-button size="small" type="primary" @click="openDetail('API日志', scope.row)">详情</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+            <div class="pagination">
+              <el-pagination background layout="total, sizes, prev, pager, next, jumper" :total="apiLogPage.total" :current-page="apiLogPage.pageIndex" :page-size="apiLogPage.pageSize" :page-sizes="[10, 20, 50]" @current-change="onApiLogPageChange" @size-change="onApiLogSizeChange"></el-pagination>
+            </div>
+          </div>
+
+          <!-- 异常日志 -->
+          <div v-show="activeMenu === 'exceptionLogs'" class="page-card">
+            <div class="search-bar">
+              <el-date-picker v-model="exceptionLogQuery.timeRange" type="datetimerange" format="YYYY-MM-DD HH:mm:ss" :default-time="[new Date(2000, 0, 1, 0, 0, 0), new Date(2000, 0, 1, 23, 59, 59)]" range-separator="至" start-placeholder="开始时间" end-placeholder="结束时间" value-format="YYYY-MM-DD HH:mm:ss" style="width:400px;"></el-date-picker>
+              <el-input v-model="exceptionLogQuery.userName" placeholder="操作人" clearable @keyup.enter="loadExceptionLogs"></el-input>
+              <el-input v-model="exceptionLogQuery.controller" placeholder="控制器" clearable @keyup.enter="loadExceptionLogs"></el-input>
+              <el-input v-model="exceptionLogQuery.action" placeholder="方法" clearable @keyup.enter="loadExceptionLogs"></el-input>
+              <el-input v-model="exceptionLogQuery.key" placeholder="关键字（模块名称/代码）" clearable @keyup.enter="loadExceptionLogs"></el-input>
+              <el-button type="primary" @click="loadExceptionLogs">查询</el-button>
+              <el-button @click="resetExceptionLogQuery">重置</el-button>
+            </div>
+            <el-table :data="exceptionLogs" v-loading="exceptionLogsLoading" border stripe>
+              <el-table-column prop="ModuleName" label="模块名称" min-width="120" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="ModuleCode" label="模块代码" min-width="140" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="Controller" label="控制器" min-width="130" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="Action" label="方法" min-width="100" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="Name" label="异常名称" min-width="180" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="CreatorName" label="操作人" width="110" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="CreateTime" label="创建时间" width="165">
+                <template #default="scope">{{ fmtTime(scope.row.CreateTime) }}</template>
+              </el-table-column>
+              <el-table-column label="操作" width="80" fixed="right">
+                <template #default="scope">
+                  <el-button size="small" type="primary" @click="openDetail('异常日志', scope.row)">详情</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+            <div class="pagination">
+              <el-pagination background layout="total, sizes, prev, pager, next, jumper" :total="exceptionLogPage.total" :current-page="exceptionLogPage.pageIndex" :page-size="exceptionLogPage.pageSize" :page-sizes="[10, 20, 50]" @current-change="onExceptionLogPageChange" @size-change="onExceptionLogSizeChange"></el-pagination>
+            </div>
+          </div>
+
+          <!-- 全局异常 -->
+          <div v-show="activeMenu === 'globalExceptionLogs'" class="page-card">
+            <div class="search-bar">
+              <el-date-picker v-model="globalExceptionLogQuery.timeRange" type="datetimerange" format="YYYY-MM-DD HH:mm:ss" :default-time="[new Date(2000, 0, 1, 0, 0, 0), new Date(2000, 0, 1, 23, 59, 59)]" range-separator="至" start-placeholder="开始时间" end-placeholder="结束时间" value-format="YYYY-MM-DD HH:mm:ss" style="width:400px;"></el-date-picker>
+              <el-input v-model="globalExceptionLogQuery.userName" placeholder="操作人" clearable @keyup.enter="loadGlobalExceptionLogs"></el-input>
+              <el-input v-model="globalExceptionLogQuery.key" placeholder="关键字（模块名称/代码）" clearable @keyup.enter="loadGlobalExceptionLogs"></el-input>
+              <el-button type="primary" @click="loadGlobalExceptionLogs">查询</el-button>
+              <el-button @click="resetGlobalExceptionLogQuery">重置</el-button>
+            </div>
+            <el-table :data="globalExceptionLogs" v-loading="globalExceptionLogsLoading" border stripe>
+              <el-table-column prop="ModuleName" label="模块名称" min-width="140" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="ModuleCode" label="模块代码" min-width="160" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="Name" label="异常名称" min-width="200" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="CreateTime" label="创建时间" width="165">
+                <template #default="scope">{{ fmtTime(scope.row.CreateTime) }}</template>
+              </el-table-column>
+              <el-table-column label="操作" width="80" fixed="right">
+                <template #default="scope">
+                  <el-button size="small" type="primary" @click="openDetail('全局异常', scope.row)">详情</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+            <div class="pagination">
+              <el-pagination background layout="total, sizes, prev, pager, next, jumper" :total="globalExceptionLogPage.total" :current-page="globalExceptionLogPage.pageIndex" :page-size="globalExceptionLogPage.pageSize" :page-sizes="[10, 20, 50]" @current-change="onGlobalExceptionLogPageChange" @size-change="onGlobalExceptionLogSizeChange"></el-pagination>
+            </div>
+          </div>
+
+          <!-- 登录日志 -->
+          <div v-show="activeMenu === 'loginLogs'" class="page-card">
+            <div class="search-bar">
+              <el-date-picker v-model="loginLogQuery.timeRange" type="datetimerange" format="YYYY-MM-DD HH:mm:ss" :default-time="[new Date(2000, 0, 1, 0, 0, 0), new Date(2000, 0, 1, 23, 59, 59)]" range-separator="至" start-placeholder="开始时间" end-placeholder="结束时间" value-format="YYYY-MM-DD HH:mm:ss" style="width:400px;"></el-date-picker>
+              <el-input v-model="loginLogQuery.userName" placeholder="操作人" clearable @keyup.enter="loadLoginLogs"></el-input>
+              <el-input v-model="loginLogQuery.key" placeholder="关键字（用户名/IP等）" clearable @keyup.enter="loadLoginLogs"></el-input>
+              <el-button type="primary" @click="loadLoginLogs">查询</el-button>
+              <el-button @click="resetLoginLogQuery">重置</el-button>
+            </div>
+            <el-table :data="loginLogs" v-loading="loginLogsLoading" border stripe>
+              <el-table-column prop="UserName" label="用户名" min-width="130" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="Source" label="来源" min-width="130" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="LoginType" label="登录方式" min-width="120" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="IPAddress" label="IP地址" width="140" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="CreatorName" label="操作人" width="120" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="CreateTime" label="创建时间" width="165">
+                <template #default="scope">{{ fmtTime(scope.row.CreateTime) }}</template>
+              </el-table-column>
+            </el-table>
+            <div class="pagination">
+              <el-pagination background layout="total, sizes, prev, pager, next, jumper" :total="loginLogPage.total" :current-page="loginLogPage.pageIndex" :page-size="loginLogPage.pageSize" :page-sizes="[10, 20, 50]" @current-change="onLoginLogPageChange" @size-change="onLoginLogSizeChange"></el-pagination>
+            </div>
+          </div>
+
+          <!-- 操作日志 -->
+          <div v-show="activeMenu === 'operationLogs'" class="page-card">
+            <div class="search-bar">
+              <el-date-picker v-model="operationLogQuery.timeRange" type="datetimerange" format="YYYY-MM-DD HH:mm:ss" :default-time="[new Date(2000, 0, 1, 0, 0, 0), new Date(2000, 0, 1, 23, 59, 59)]" range-separator="至" start-placeholder="开始时间" end-placeholder="结束时间" value-format="YYYY-MM-DD HH:mm:ss" style="width:400px;"></el-date-picker>
+              <el-input v-model="operationLogQuery.userName" placeholder="操作人" clearable @keyup.enter="loadOperationLogs"></el-input>
+              <el-input v-model="operationLogQuery.key" placeholder="关键字（模块名称/代码）" clearable @keyup.enter="loadOperationLogs"></el-input>
+              <el-button type="primary" @click="loadOperationLogs">查询</el-button>
+              <el-button @click="resetOperationLogQuery">重置</el-button>
+            </div>
+            <el-table :data="operationLogs" v-loading="operationLogsLoading" border stripe>
+              <el-table-column prop="ModuleName" label="模块名称" min-width="120" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="ModuleCode" label="模块代码" min-width="140" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="Controller" label="控制器" min-width="130" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="Action" label="方法" min-width="100" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="Type" label="操作类型" min-width="90" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="Content" label="内容" min-width="220" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="Remark" label="备注" min-width="140" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="CreatorName" label="操作人" width="110" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="CreateTime" label="创建时间" width="165">
+                <template #default="scope">{{ fmtTime(scope.row.CreateTime) }}</template>
+              </el-table-column>
+              <el-table-column label="操作" width="80" fixed="right">
+                <template #default="scope">
+                  <el-button size="small" type="primary" @click="openDetail('操作日志', scope.row)">详情</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+            <div class="pagination">
+              <el-pagination background layout="total, sizes, prev, pager, next, jumper" :total="operationLogPage.total" :current-page="operationLogPage.pageIndex" :page-size="operationLogPage.pageSize" :page-sizes="[10, 20, 50]" @current-change="onOperationLogPageChange" @size-change="onOperationLogSizeChange"></el-pagination>
+            </div>
+          </div>
+
+          <!-- 活跃度 -->
+          <div v-show="activeMenu === 'liveness'" class="page-card">
+            <div class="search-bar">
+              <el-date-picker v-model="livenessQuery.timeRange" type="datetimerange" format="YYYY-MM-DD HH:mm:ss" :default-time="[new Date(2000, 0, 1, 0, 0, 0), new Date(2000, 0, 1, 23, 59, 59)]" range-separator="至" start-placeholder="开始时间" end-placeholder="结束时间" value-format="YYYY-MM-DD HH:mm:ss" style="width:400px;"></el-date-picker>
+              <el-button type="primary" @click="loadLiveness">查询</el-button>
+              <el-button @click="resetLivenessQuery">重置</el-button>
+            </div>
+            <el-alert v-if="!livenessData.UserId" type="info" :closable="false" show-icon title="未登录访问，无法获取当前用户活跃度（需携带登录凭证访问 API 后展示）" style="margin-bottom:14px;"></el-alert>
+            <el-table :data="livenessData.Dates" v-loading="livenessLoading" border stripe>
+              <el-table-column label="日期" min-width="180">
+                <template #default="scope">{{ fmtTime(scope.row.Date) }}</template>
+              </el-table-column>
+              <el-table-column label="个人活跃度" min-width="300">
+                <template #default="scope">
+                  <div>
+                    <span class="liveness-num">{{ scope.row.Value }}</span>
+                    <el-progress class="liveness-bar" :percentage="livenessPercent(scope.row.Value)" :stroke-width="10"></el-progress>
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column label="平均活跃度" min-width="300">
+                <template #default="scope">
+                  <div>
+                    <span class="liveness-num">{{ scope.row.AvgValue }}</span>
+                    <el-progress class="liveness-bar" :percentage="livenessPercent(scope.row.AvgValue)" :stroke-width="10" color="#e6a23c"></el-progress>
+                  </div>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
+
+          <!-- 企业活动 -->
+          <div v-show="activeMenu === 'activity'" class="page-card">
+            <div class="search-bar">
+              <el-select v-model="activityTop" style="width:140px;">
+                <el-option v-for="t in activityTops" :key="t" :label="'显示 ' + t + ' 条'" :value="t"></el-option>
+              </el-select>
+              <el-button type="primary" @click="loadActivity">查询</el-button>
+            </div>
+            <el-alert type="info" :closable="false" show-icon title="企业活动展示今日企业登录记录（免登录访问时无数据，需携带登录凭证访问 API 后展示）" style="margin-bottom:14px;"></el-alert>
+            <el-table :data="activityLogs" v-loading="activityLoading" border stripe>
+              <el-table-column prop="UserName" label="用户名" min-width="140" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="Source" label="来源" min-width="140" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="LoginType" label="登录方式" min-width="130" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="IPAddress" label="IP地址" width="150" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="CreateTime" label="创建时间" width="170">
+                <template #default="scope">{{ fmtTime(scope.row.CreateTime) }}</template>
+              </el-table-column>
+            </el-table>
+          </div>
+
+          <!-- 内置任务 -->
+          <div v-show="activeMenu === 'startups'">
+            <el-card v-for="job in startupJobs" :key="job.name" class="job-card">
+              <template #header>
+                <div class="card-header">
+                  <span style="font-weight:600;">{{ job.name }}</span>
+                  <el-tag type="info">{{ job.cron }}</el-tag>
+                </div>
+              </template>
+              <div class="card-body">
+                <p>{{ job.remark }}</p>
+              </div>
+              <div class="card-actions">
+                <el-button size="small" type="warning" @click="stopStartupJob(job.name)">暂停</el-button>
+                <el-button size="small" type="success" @click="resumeStartupJob(job.name)">恢复</el-button>
+                <el-button size="small" type="primary" @click="excuteStartupJob(job.name)">执行一次</el-button>
+              </div>
+            </el-card>
+          </div>
+        </el-main>
+      </el-container>
+    </el-container>
+
+    <!-- 日志详情弹窗 -->
+    <el-dialog v-model="detailDialogVisible" :title="detailTitle" width="1000px" top="6vh">
+      <el-descriptions :column="2" border size="small" label-width="110px" class="detail-descriptions" v-if="detailType === 'api'">
+        <el-descriptions-item label="模块名称">{{ detailData.ModuleName || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="模块代码">{{ detailData.ModuleCode || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="控制器">{{ detailData.Controller || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="方法">{{ detailData.Action || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="请求方法">{{ detailData.Method || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="状态码">{{ detailData.StatusCode || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="请求域名">{{ detailData.Host || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="IP地址">{{ detailData.IPAddress || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="内容类型">{{ detailData.ContentType || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="耗时">{{ detailData.TimeSpan || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="浏览器信息" :span="2">{{ detailData.UserAgent || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="请求地址" :span="2">{{ detailData.Url || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="操作人">{{ detailData.CreatorName || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="创建时间">{{ fmtTime(detailData.CreateTime) }}</el-descriptions-item>
+        <el-descriptions-item label="请求内容" :span="2">
+          <div class="detail-content">{{ detailData.RequestBody || '（空）' }}</div>
+        </el-descriptions-item>
+        <el-descriptions-item label="响应内容" :span="2">
+          <div class="detail-content">{{ detailData.ReponseBody || '（空）' }}</div>
+        </el-descriptions-item>
+      </el-descriptions>
+      <div v-else-if="detailType === 'exception' || detailType === 'global' || detailType === 'operation'">
+        <el-descriptions :column="2" border size="small" label-width="110px" class="detail-descriptions">
+          <el-descriptions-item label="模块名称">{{ detailData.ModuleName || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="模块代码">{{ detailData.ModuleCode || '-' }}</el-descriptions-item>
+          <el-descriptions-item v-if="detailType !== 'global'" label="控制器">{{ detailData.Controller || '-' }}</el-descriptions-item>
+          <el-descriptions-item v-if="detailType !== 'global'" label="方法">{{ detailData.Action || '-' }}</el-descriptions-item>
+          <el-descriptions-item v-if="detailType === 'operation'" label="操作类型">{{ detailData.Type || '-' }}</el-descriptions-item>
+          <el-descriptions-item v-if="detailType === 'operation'" label="备注">{{ detailData.Remark || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="异常名称">{{ detailData.Name || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="创建时间">{{ fmtTime(detailData.CreateTime) }}</el-descriptions-item>
+          <el-descriptions-item label="操作人" :span="2">{{ detailData.CreatorName || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="详细内容" :span="2">
+            <div class="detail-content">{{ detailData.Content || '（空）' }}</div>
+          </el-descriptions-item>
+        </el-descriptions>
+      </div>
+      <template #footer>
+        <el-button @click="detailDialogVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
+  </div>
+
+  <script src="/lib/vue.global.prod.js"></script>
+  <script src="/lib/element-plus.min.js"></script>
+  <script src="/lib/element-plus-icons.min.js"></script>
+  <script>
+    const { createApp } = Vue;
+    const { ElMessage, ElMessageBox } = ElementPlus;
+
+    // 请求封装：HTTP 失败或响应 Status === false 时抛出异常
+    async function request(url, options = {}) {
+      const res = await fetch(url, {
+        headers: { 'Content-Type': 'application/json' },
+        ...options
+      });
+      let data = null;
+      try { data = await res.json(); } catch (e) { data = null; }
+      if (!res.ok) {
+        throw new Error((data && data.Message) || ('请求失败（HTTP ' + res.status + '）'));
+      }
+      if (data && typeof data.Status === 'boolean' && data.Status === false) {
+        throw new Error(data.Message || '操作失败');
+      }
+      return data;
+    }
+
+    // 拼接查询参数（过滤空值）
+    function buildQuery(params) {
+      const usp = new URLSearchParams();
+      Object.keys(params).forEach(k => {
+        const v = params[k];
+        if (v !== null && v !== undefined && v !== '' && v !== -1) usp.append(k, v);
+      });
+      const s = usp.toString();
+      return s ? ('?' + s) : '';
+    }
+
+    // 从时间范围构造起止时间参数
+    function rangeParams(range) {
+      return {
+        startTime: range ? range[0] : '',
+        endTime: range ? range[1] : ''
+      };
+    }
+
+    // 常用方法映射
+    const methodMap = {
+      GET: 'primary',
+      POST: 'success',
+      PUT: 'warning',
+      PATCH: 'info',
+      DELETE: 'danger'
+    };
+
+    // 状态码颜色
+    function statusCodeType(code) {
+      const n = parseInt(code, 10);
+      if (isNaN(n)) return 'info';
+      if (n >= 200 && n < 300) return 'success';
+      if (n >= 400 && n < 500) return 'warning';
+      if (n >= 500) return 'danger';
+      return 'info';
+    }
+
+    // 活跃度百分比（封顶100）
+    function livenessPercent(value) {
+      return Math.min(value || 0, 100);
+    }
+
+    createApp({
+      data() {
+        return {
+          activeMenu: 'apiLogs',
+          // ---------- API日志 ----------
+          apiLogQuery: { timeRange: null, userName: '', controller: '', action: '', url: '', key: '' },
+          apiLogPage: { pageIndex: 1, pageSize: 10, total: 0 },
+          apiLogs: [],
+          apiLogsLoading: false,
+          // ---------- 异常日志 ----------
+          exceptionLogQuery: { timeRange: null, userName: '', controller: '', action: '', key: '' },
+          exceptionLogPage: { pageIndex: 1, pageSize: 10, total: 0 },
+          exceptionLogs: [],
+          exceptionLogsLoading: false,
+          // ---------- 全局异常 ----------
+          globalExceptionLogQuery: { timeRange: null, userName: '', key: '' },
+          globalExceptionLogPage: { pageIndex: 1, pageSize: 10, total: 0 },
+          globalExceptionLogs: [],
+          globalExceptionLogsLoading: false,
+          // ---------- 登录日志 ----------
+          loginLogQuery: { timeRange: null, userName: '', key: '' },
+          loginLogPage: { pageIndex: 1, pageSize: 10, total: 0 },
+          loginLogs: [],
+          loginLogsLoading: false,
+          // ---------- 操作日志 ----------
+          operationLogQuery: { timeRange: null, userName: '', key: '' },
+          operationLogPage: { pageIndex: 1, pageSize: 10, total: 0 },
+          operationLogs: [],
+          operationLogsLoading: false,
+          // ---------- 活跃度 ----------
+          livenessQuery: { timeRange: null },
+          livenessData: { UserId: '', StartDate: '', EndDate: '', Dates: [] },
+          livenessLoading: false,
+          // ---------- 企业活动 ----------
+          activityTop: 10,
+          activityTops: [10, 20, 50, 100],
+          activityLogs: [],
+          activityLoading: false,
+          // ---------- 详情弹窗 ----------
+          detailDialogVisible: false,
+          detailTitle: '',
+          detailType: '',
+          detailData: {},
+          // ---------- 内置任务（与 appsettings.json Quartz.ScheduleJobs 对应） ----------
+          startupJobs: [
+            { name: 'DeleteSysLogJob', cron: '0 0 2 * * ?', remark: '定时删除系统日志，每天凌晨2点执行一次（API日志-3天、异常日志-7天、全局异常-7天、登录日志-15天、操作日志-15天）' }
+          ]
+        };
+      },
+      computed: {
+        pageTitle() {
+          const map = { apiLogs: 'API日志', exceptionLogs: '异常日志', globalExceptionLogs: '全局异常', loginLogs: '登录日志', operationLogs: '操作日志', liveness: '活跃度', activity: '企业活动', startups: '内置任务' };
+          return map[this.activeMenu] || '';
+        }
+      },
+      methods: {
+        fmtTime(v) {
+          if (!v) return '-';
+          const s = String(v);
+          if (s.indexOf('0001') === 0 || s.indexOf('9999') === 0) return '-';
+          return s;
+        },
+        methodType(method) {
+          return methodMap[method] || 'info';
+        },
+        statusCodeType,
+        livenessPercent,
+
+        // ---------- 菜单 ----------
+        onMenuSelect(index) {
+          this.activeMenu = index;
+          switch (index) {
+            case 'apiLogs': this.loadApiLogs(); break;
+            case 'exceptionLogs': this.loadExceptionLogs(); break;
+            case 'globalExceptionLogs': this.loadGlobalExceptionLogs(); break;
+            case 'loginLogs': this.loadLoginLogs(); break;
+            case 'operationLogs': this.loadOperationLogs(); break;
+            case 'liveness': this.loadLiveness(); break;
+            case 'activity': this.loadActivity(); break;
+            case 'startups': break;
+          }
+        },
+
+        // ---------- API日志 ----------
+        async loadApiLogs() {
+          this.apiLogsLoading = true;
+          try {
+            const params = {
+              ...rangeParams(this.apiLogQuery.timeRange),
+              userName: this.apiLogQuery.userName,
+              controller: this.apiLogQuery.controller,
+              action: this.apiLogQuery.action,
+              url: this.apiLogQuery.url,
+              key: this.apiLogQuery.key
+            };
+            const url = '/api/SysApiLogs/' + this.apiLogPage.pageIndex + '/' + this.apiLogPage.pageSize + buildQuery(params);
+            const res = await request(url);
+            this.apiLogs = res.Items || [];
+            this.apiLogPage.total = res.Total || 0;
+          } catch (e) {
+            ElMessage.error(e.message);
+          } finally {
+            this.apiLogsLoading = false;
+          }
+        },
+        resetApiLogQuery() {
+          this.apiLogQuery = { timeRange: null, userName: '', controller: '', action: '', url: '', key: '' };
+          this.apiLogPage.pageIndex = 1;
+          this.loadApiLogs();
+        },
+        onApiLogPageChange(page) {
+          this.apiLogPage.pageIndex = page;
+          this.loadApiLogs();
+        },
+        onApiLogSizeChange(size) {
+          this.apiLogPage.pageSize = size;
+          this.apiLogPage.pageIndex = 1;
+          this.loadApiLogs();
+        },
+
+        // ---------- 异常日志 ----------
+        async loadExceptionLogs() {
+          this.exceptionLogsLoading = true;
+          try {
+            const params = {
+              ...rangeParams(this.exceptionLogQuery.timeRange),
+              userName: this.exceptionLogQuery.userName,
+              controller: this.exceptionLogQuery.controller,
+              action: this.exceptionLogQuery.action,
+              key: this.exceptionLogQuery.key
+            };
+            const url = '/api/SysExceptionLogs/' + this.exceptionLogPage.pageIndex + '/' + this.exceptionLogPage.pageSize + buildQuery(params);
+            const res = await request(url);
+            this.exceptionLogs = res.Items || [];
+            this.exceptionLogPage.total = res.Total || 0;
+          } catch (e) {
+            ElMessage.error(e.message);
+          } finally {
+            this.exceptionLogsLoading = false;
+          }
+        },
+        resetExceptionLogQuery() {
+          this.exceptionLogQuery = { timeRange: null, userName: '', controller: '', action: '', key: '' };
+          this.exceptionLogPage.pageIndex = 1;
+          this.loadExceptionLogs();
+        },
+        onExceptionLogPageChange(page) {
+          this.exceptionLogPage.pageIndex = page;
+          this.loadExceptionLogs();
+        },
+        onExceptionLogSizeChange(size) {
+          this.exceptionLogPage.pageSize = size;
+          this.exceptionLogPage.pageIndex = 1;
+          this.loadExceptionLogs();
+        },
+
+        // ---------- 全局异常 ----------
+        async loadGlobalExceptionLogs() {
+          this.globalExceptionLogsLoading = true;
+          try {
+            const params = {
+              ...rangeParams(this.globalExceptionLogQuery.timeRange),
+              userName: this.globalExceptionLogQuery.userName,
+              key: this.globalExceptionLogQuery.key
+            };
+            const url = '/api/SysGlobalExceptionLogs/' + this.globalExceptionLogPage.pageIndex + '/' + this.globalExceptionLogPage.pageSize + buildQuery(params);
+            const res = await request(url);
+            this.globalExceptionLogs = res.Items || [];
+            this.globalExceptionLogPage.total = res.Total || 0;
+          } catch (e) {
+            ElMessage.error(e.message);
+          } finally {
+            this.globalExceptionLogsLoading = false;
+          }
+        },
+        resetGlobalExceptionLogQuery() {
+          this.globalExceptionLogQuery = { timeRange: null, userName: '', key: '' };
+          this.globalExceptionLogPage.pageIndex = 1;
+          this.loadGlobalExceptionLogs();
+        },
+        onGlobalExceptionLogPageChange(page) {
+          this.globalExceptionLogPage.pageIndex = page;
+          this.loadGlobalExceptionLogs();
+        },
+        onGlobalExceptionLogSizeChange(size) {
+          this.globalExceptionLogPage.pageSize = size;
+          this.globalExceptionLogPage.pageIndex = 1;
+          this.loadGlobalExceptionLogs();
+        },
+
+        // ---------- 登录日志 ----------
+        async loadLoginLogs() {
+          this.loginLogsLoading = true;
+          try {
+            const params = {
+              ...rangeParams(this.loginLogQuery.timeRange),
+              userName: this.loginLogQuery.userName,
+              key: this.loginLogQuery.key
+            };
+            const url = '/api/SysLoginLogs/' + this.loginLogPage.pageIndex + '/' + this.loginLogPage.pageSize + buildQuery(params);
+            const res = await request(url);
+            this.loginLogs = res.Items || [];
+            this.loginLogPage.total = res.Total || 0;
+          } catch (e) {
+            ElMessage.error(e.message);
+          } finally {
+            this.loginLogsLoading = false;
+          }
+        },
+        resetLoginLogQuery() {
+          this.loginLogQuery = { timeRange: null, userName: '', key: '' };
+          this.loginLogPage.pageIndex = 1;
+          this.loadLoginLogs();
+        },
+        onLoginLogPageChange(page) {
+          this.loginLogPage.pageIndex = page;
+          this.loadLoginLogs();
+        },
+        onLoginLogSizeChange(size) {
+          this.loginLogPage.pageSize = size;
+          this.loginLogPage.pageIndex = 1;
+          this.loadLoginLogs();
+        },
+
+        // ---------- 操作日志 ----------
+        async loadOperationLogs() {
+          this.operationLogsLoading = true;
+          try {
+            const params = {
+              ...rangeParams(this.operationLogQuery.timeRange),
+              userName: this.operationLogQuery.userName,
+              key: this.operationLogQuery.key
+            };
+            const url = '/api/SysOperationLogs/' + this.operationLogPage.pageIndex + '/' + this.operationLogPage.pageSize + buildQuery(params);
+            const res = await request(url);
+            this.operationLogs = res.Items || [];
+            this.operationLogPage.total = res.Total || 0;
+          } catch (e) {
+            ElMessage.error(e.message);
+          } finally {
+            this.operationLogsLoading = false;
+          }
+        },
+        resetOperationLogQuery() {
+          this.operationLogQuery = { timeRange: null, userName: '', key: '' };
+          this.operationLogPage.pageIndex = 1;
+          this.loadOperationLogs();
+        },
+        onOperationLogPageChange(page) {
+          this.operationLogPage.pageIndex = page;
+          this.loadOperationLogs();
+        },
+        onOperationLogSizeChange(size) {
+          this.operationLogPage.pageSize = size;
+          this.operationLogPage.pageIndex = 1;
+          this.loadOperationLogs();
+        },
+
+        // ---------- 活跃度 ----------
+        async loadLiveness() {
+          this.livenessLoading = true;
+          try {
+            const params = rangeParams(this.livenessQuery.timeRange);
+            const url = '/api/Liveness' + buildQuery(params);
+            const res = await request(url);
+            this.livenessData = res || { UserId: '', StartDate: '', EndDate: '', Dates: [] };
+          } catch (e) {
+            ElMessage.error(e.message);
+          } finally {
+            this.livenessLoading = false;
+          }
+        },
+        resetLivenessQuery() {
+          this.livenessQuery = { timeRange: this.defaultTimeRange(3) };
+          this.loadLiveness();
+        },
+
+        // ---------- 企业活动 ----------
+        async loadActivity() {
+          this.activityLoading = true;
+          try {
+            const url = '/api/Activitys/Login/Logs/' + this.activityTop;
+            const res = await request(url);
+            this.activityLogs = res || [];
+          } catch (e) {
+            ElMessage.error(e.message);
+          } finally {
+            this.activityLoading = false;
+          }
+        },
+
+        // ---------- 详情弹窗 ----------
+        openDetail(type, row) {
+          this.detailTitle = type + '详情';
+          this.detailType = type === 'API日志' ? 'api' : (type === '操作日志' ? 'operation' : (type === '异常日志' ? 'exception' : 'global'));
+          this.detailData = row;
+          this.detailDialogVisible = true;
+        },
+
+        // ---------- 内置任务 ----------
+        async controlStartupJob(name, action, successMsg) {
+          try {
+            await request('/api/Startups/Default/Jobs/' + name + '/' + action, { method: 'POST' });
+            ElMessage.success(successMsg);
+          } catch (e) {
+            ElMessage.error(e.message);
+          }
+        },
+        stopStartupJob(name) { this.controlStartupJob(name, 'Stop', '暂停成功'); },
+        resumeStartupJob(name) { this.controlStartupJob(name, 'Resume', '恢复成功'); },
+        excuteStartupJob(name) { this.controlStartupJob(name, 'Excute', '任务触发执行成功'); },
+
+        // ---------- 工具 ----------
+        defaultTimeRange(days) {
+          const end = new Date();
+          const start = new Date();
+          start.setDate(start.getDate() - days);
+          const fmt = (d) =>
+            d.getFullYear() + '-' +
+            String(d.getMonth() + 1).padStart(2, '0') + '-' +
+            String(d.getDate()).padStart(2, '0') + ' ' +
+            String(d.getHours()).padStart(2, '0') + ':' +
+            String(d.getMinutes()).padStart(2, '0') + ':' +
+            String(d.getSeconds()).padStart(2, '0');
+          return [fmt(start), fmt(end)];
+        }
+      },
+      mounted() {
+        // 活跃度默认展示最近3天
+        this.livenessQuery.timeRange = this.defaultTimeRange(3);
+        this.loadApiLogs();
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

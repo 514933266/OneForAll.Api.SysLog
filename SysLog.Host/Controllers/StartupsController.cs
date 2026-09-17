@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using OneForAll.Core;
+using OneForAll.Core.OAuth;
 using Quartz;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -7,6 +9,7 @@ using System.Threading.Tasks;
 namespace SysLog.Host.Controllers
 {
     [Route("api/[controller]")]
+    [AllowAnonymous]
     public class StartupsController : Controller
     {
 
@@ -20,9 +23,10 @@ namespace SysLog.Host.Controllers
         }
 
         [HttpGet]
-        public string Get()
+        [AllowAnonymous]
+        public bool Get()
         {
-            return "项目启动成功...";
+            return true;
         }
 
         /// <summary>

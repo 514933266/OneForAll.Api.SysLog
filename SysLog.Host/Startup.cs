@@ -18,7 +18,6 @@ using OneForAll.File;
 using Quartz;
 using Quartz.Impl;
 using Quartz.Spi;
-using SysLog.Host.Filters;
 using SysLog.Host.Model;
 using SysLog.Host.Models;
 using SysLog.Host.Providers;
@@ -287,6 +286,9 @@ namespace SysLog.Host
 
             // 启用默认文件支持（例如访问目录时自动查找 index.html 等默认页）
             app.UseDefaultFiles();
+
+            // 启用 wwwroot 静态文件服务（前端单页应用）
+            app.UseStaticFiles();
 
             // 启用路由中间件，为后续的端点映射做准备
             app.UseRouting();

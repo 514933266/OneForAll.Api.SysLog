@@ -15,7 +15,7 @@ namespace SysLog.Host.Controllers
     /// 异常日志
     /// </summary>
     [Route("api/[controller]")]
-    [Authorize(Roles = UserRoleType.Ruler)]
+    [AllowAnonymous]
     public class SysExceptionLogsController : BaseController
 	{
 		private readonly ISysExceptionLogService _service;

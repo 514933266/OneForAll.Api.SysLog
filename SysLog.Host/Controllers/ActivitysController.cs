@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System;
 using Microsoft.AspNetCore.Authorization;
 using System.Collections.Generic;
+using OneForAll.Core.Extension;
 using OneForAll.Core.OAuth;
 
 namespace SysLog.Host.Controllers
@@ -13,7 +14,7 @@ namespace SysLog.Host.Controllers
     /// 企业活动
     /// </summary>
     [Route("api/[controller]")]
-    [Authorize(Roles = UserRoleType.Admin)]
+    [AllowAnonymous]
     public class ActivitysController : BaseController
     {
         private readonly IActivityService _service;
@@ -33,6 +34,9 @@ namespace SysLog.Host.Controllers
         public async Task<IEnumerable<SysLoginLogDto>> GetListLoginAsync(int top = 10)
         {
             if (top > 100) top = 100;
+            // 未登录（管理界面免登录访问）时返回空列表
+            if (LoginUser.Id.IsNullOrEmpty())
+                return new List<SysLoginLogDto>();
             return await _service.GetListLoginAsync(top);
         }
     }

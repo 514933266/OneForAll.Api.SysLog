@@ -35,7 +35,7 @@ namespace SysLog.HttpService
         public async Task SendToWxqyRobotMarkdownAsync(UmsWxqyRobotTextForm form)
         {
             var client = GetHttpClient(_config.SysUms);
-            if (client != null && client.BaseAddress != null)
+            if (client != null && client.BaseAddress != null && !string.IsNullOrEmpty(client.BaseAddress.Host))
             {
                 var url = $"{client.BaseAddress}api/WxqyMessages/Robot/Markdown";
                 await client.PostAsync(new Uri(url), form, new JsonMediaTypeFormatter());

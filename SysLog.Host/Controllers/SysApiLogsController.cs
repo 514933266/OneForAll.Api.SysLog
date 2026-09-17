@@ -14,7 +14,7 @@ namespace SysLog.Host.Controllers
     /// 系统日志信息
     /// </summary>
     [Route("api/[controller]")]
-    [Authorize(Roles = UserRoleType.Ruler)]
+    [AllowAnonymous]
     public class SysApiLogsController : BaseController
 	{
 		private readonly ISysApiLogService _service;
@@ -34,6 +34,7 @@ namespace SysLog.Host.Controllers
 		/// <param name="userName">操作人</param>
 		/// <param name="controller">控制器</param>
 		/// <param name="action">方法</param>
+		/// <param name="url">请求地址</param>
 		/// <param name="key">关键字</param>
 		///  <returns>分页</returns>
 		[HttpGet]
@@ -46,9 +47,10 @@ namespace SysLog.Host.Controllers
 			[FromQuery] string userName = default,
 			[FromQuery] string controller = default,
 			[FromQuery] string action = default,
+			[FromQuery] string url = default,
 			[FromQuery] string key = default)
 		{
-			return await _service.GetPgaeAsync(pageIndex, pageSize, startTime, endTime, userName, controller, action, key);
+			return await _service.GetPgaeAsync(pageIndex, pageSize, startTime, endTime, userName, controller, action, url, key);
 		}
 
 		/// <summary>

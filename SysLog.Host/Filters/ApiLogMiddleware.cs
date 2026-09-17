@@ -21,7 +21,6 @@ namespace SysLog.Host.Filters
     /// </summary>
     public class ApiLogMiddleware
     {
-        private readonly Stopwatch _stopWatch;
         private readonly RequestDelegate _next;
         private readonly AuthConfig _authConfig;
 
@@ -38,7 +37,6 @@ namespace SysLog.Host.Filters
             _next = next;
             _authConfig = authConfig;
             _service = service;
-            _stopWatch = new Stopwatch();
         }
 
         /// <summary>
@@ -49,8 +47,9 @@ namespace SysLog.Host.Filters
         /// <returns>异步任务</returns>
         public async Task InvokeAsync(HttpContext context)
         {
-            // 重置并启动计时器，用于记录 API 执行时间
-            _stopWatch.Start();
+            // 启动计时器，用于记录 API 执行时间
+            var stopWatch = new Stopwatch();
+            stopWatch.Start();
 
             // 尝试从当前终结点（Endpoint）中获取控制器和动作元数据
             var descriptor = context.GetEndpoint()?.Metadata.GetMetadata<ControllerActionDescriptor>();
@@ -88,8 +87,8 @@ namespace SysLog.Host.Filters
             // 注册响应完成回调：在响应发送完毕后记录耗时和状态码，并保存日志
             context.Response.OnCompleted(async () =>
             {
-                _stopWatch.Stop();
-                data.TimeSpan = _stopWatch.Elapsed.ToString(@"hh\:mm\:ss\.fff"); // 格式化为可读时间
+                stopWatch.Stop();
+                data.TimeSpan = stopWatch.Elapsed.ToString(@"hh\:mm\:ss\.fff"); // 格式化为可读时间
                 data.StatusCode = context.Response.StatusCode.ToString();
 
                 try

@@ -15,7 +15,7 @@ namespace SysLog.Host.Controllers
 	/// 操作日志
 	/// </summary>
     [Route("api/[controller]")]
-    [Authorize(Roles = UserRoleType.Ruler)]
+    [AllowAnonymous]
     public class SysOperationLogsController : BaseController
 	{
 		private readonly ISysOperationLogService _service;

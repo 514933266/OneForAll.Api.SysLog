@@ -23,6 +23,7 @@ namespace SysLog.Domain.Repositorys
         /// <param name="userName">操作人</param>
         /// <param name="controller">控制器</param>
         /// <param name="action">方法</param>
+        /// <param name="url">请求地址</param>
         /// <param name="key">关键字</param>
         /// <returns>分页</returns>
         Task<PageList<SysApiLog>> GetPgaeAsync(
@@ -33,6 +34,7 @@ namespace SysLog.Domain.Repositorys
             string userName,
             string controller,
             string action,
+            string url,
             string key);
 
         /// <summary>

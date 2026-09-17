@@ -35,7 +35,7 @@ namespace SysLog.HttpService
         public async Task<BaseErrType> RegisterAsync(JobRegisterRequest request)
         {
             var client = GetHttpClient(_config.SysJob);
-            if (client != null && client.BaseAddress != null)
+            if (client != null && client.BaseAddress != null && !string.IsNullOrEmpty(client.BaseAddress.Host))
             {
                 var response = await client.PostAsync($"api/ScheduleJobs", request, new JsonMediaTypeFormatter());
                 var msg = await response.Content.ReadAsAsync<BaseMessage>();
@@ -53,7 +53,7 @@ namespace SysLog.HttpService
         public async Task DownLineAsync(string appId, string taskName)
         {
             var client = GetHttpClient(_config.SysJob);
-            if (client != null && client.BaseAddress != null)
+            if (client != null && client.BaseAddress != null && !string.IsNullOrEmpty(client.BaseAddress.Host))
             {
                 await client.DeleteAsync($"api/ScheduleJobs/{appId}/{taskName}");
             }
@@ -69,7 +69,7 @@ namespace SysLog.HttpService
         public async Task<BaseErrType> LogAsync(string appId, string taskName, string log)
         {
             var client = GetHttpClient(_config.SysJob);
-            if (client != null && client.BaseAddress != null)
+            if (client != null && client.BaseAddress != null && !string.IsNullOrEmpty(client.BaseAddress.Host))
             {
                 var response = await client.PostAsync($"api/ScheduleJobs/{appId}/{taskName}/Logs", log, new JsonMediaTypeFormatter());
                 var msg = await response.Content.ReadAsAsync<BaseMessage>();

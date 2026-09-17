@@ -37,6 +37,7 @@ namespace SysLog.Application
         /// <param name="userName">操作人</param>
         /// <param name="controller">控制器</param>
         /// <param name="action">方法</param>
+        /// <param name="url">请求地址</param>
         /// <param name="key">关键字</param>
         ///  <returns>分页</returns>
         public async Task<PageList<SysApiLogDto>> GetPgaeAsync(
@@ -47,9 +48,10 @@ namespace SysLog.Application
             string userName,
             string controller,
             string action,
+            string url,
             string key)
 		{
-			var data = await _manager.GetPgaeAsync(pageIndex, pageSize, startTime, endTime, userName, controller, action, key);
+			var data = await _manager.GetPgaeAsync(pageIndex, pageSize, startTime, endTime, userName, controller, action, url, key);
 			var items = _mapper.Map<IEnumerable<SysApiLog>, IEnumerable<SysApiLogDto>>(data.Items);
 			return new PageList<SysApiLogDto>(data.Total, data.PageIndex, data.PageSize, items);
 		}

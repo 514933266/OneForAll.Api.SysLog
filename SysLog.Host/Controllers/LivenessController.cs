@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using SysLog.Application.Dtos;
 using SysLog.Application.Interfaces;
+using OneForAll.Core.Extension;
 using OneForAll.Core.OAuth;
 
 namespace SysLog.Host.Controllers
@@ -13,7 +14,7 @@ namespace SysLog.Host.Controllers
 	/// 活跃度
 	/// </summary>
 	[Route("api/[controller]")]
-    [Authorize(Roles = UserRoleType.Admin)]
+    [AllowAnonymous]
     public class LivenessController : BaseController
     {
         private readonly ILivenessService _service;
@@ -34,6 +35,9 @@ namespace SysLog.Host.Controllers
         {
             var startDate = startTime ?? DateTime.UtcNow.AddDays(-3);
             var endDate = endTime ?? DateTime.UtcNow;
+            // 未登录（管理界面免登录访问）时返回空活跃度
+            if (LoginUser.Id.IsNullOrEmpty())
+                return new UserLivenessDto() { StartDate = startDate, EndDate = endDate };
             return await _service.GetAsync(startDate, endDate);
         }
     }
