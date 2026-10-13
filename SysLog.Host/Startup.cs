@@ -38,6 +38,7 @@ namespace SysLog.Host
         const string CORS = "Cors";
         const string AUTH = "Auth";
         const string QUARTZ = "Quartz";
+        const string JOB_LOCK = "JobLock";
         const string BASE_HOST = "SysLog.Host";
         const string BASE_APPLICATION = "SysLog.Application";
         const string BASE_DOMAIN = "SysLog.Domain";
@@ -194,6 +195,11 @@ namespace SysLog.Host
             // 读取 Quartz 定时任务配置
             var quartzConfig = Configuration.GetSection(QUARTZ).Get<QuartzScheduleJobConfig>();
             services.AddSingleton(quartzConfig); // 注册配置为单例
+
+            // 定时任务运行锁配置（调度中心并发检查异常时是否放行执行）
+            var jobLockConfig = new JobLockConfig();
+            Configuration.GetSection(JOB_LOCK).Bind(jobLockConfig);
+            services.AddSingleton(jobLockConfig);
 
             // 注册自定义 Job 工厂和调度器工厂
             services.AddSingleton<IJobFactory, ScheduleJobFactory>();

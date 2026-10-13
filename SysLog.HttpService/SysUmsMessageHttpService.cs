@@ -37,8 +37,7 @@ namespace SysLog.HttpService
             var client = GetHttpClient(_config.SysUms);
             if (client != null && client.BaseAddress != null && !string.IsNullOrEmpty(client.BaseAddress.Host))
             {
-                var url = $"{client.BaseAddress}api/WxqyMessages/Robot/Markdown";
-                await client.PostAsync(new Uri(url), form, new JsonMediaTypeFormatter());
+                await client.PostAsync("api/WxqyMessages/Robot/Markdown", form, new JsonMediaTypeFormatter());
             }
         }
     }

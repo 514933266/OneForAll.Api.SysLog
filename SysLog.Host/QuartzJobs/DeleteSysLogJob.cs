@@ -3,10 +3,10 @@ using Quartz;
 using SysLog.HttpService.Interfaces;
 using System.Threading.Tasks;
 using System;
+using SysLog.Domain.Models;
 using SysLog.Domain.Repositorys;
 using System.Linq;
 using SysLog.Application.Interfaces;
-using SysLog.Domain.Models;
 using Newtonsoft.Json;
 
 namespace SysLog.Host.QuartzJobs
@@ -14,94 +14,75 @@ namespace SysLog.Host.QuartzJobs
     /// <summary>
     /// 删除日志
     /// </summary>
-    public class DeleteSysLogJob : IJob
+    public class DeleteSysLogJob : BaseLockJob
     {
-        private readonly AuthConfig _config;
         private readonly ISysApiLogRepository _apiRepository;
         private readonly ISysExceptionLogRepository _exRepository;
         private readonly ISysLoginLogRepository _loginRepository;
         private readonly ISysOperationLogRepository _operaRepository;
         private readonly ISysGlobalExceptionLogRepository _gexRepository;
 
-        private readonly IScheduleJobHttpService _jobHttpService;
-        private readonly ISysGlobalExceptionLogService _gexService;
         public DeleteSysLogJob(
-            AuthConfig config,
             ISysApiLogRepository apiRepository,
             ISysExceptionLogRepository exRepository,
             ISysLoginLogRepository loginRepository,
             ISysOperationLogRepository operaRepository,
             ISysGlobalExceptionLogRepository gexRepository,
+            QuartzScheduleJobConfig jobConfig,
+            AuthConfig authConfig,
+            JobLockConfig lockConfig,
             IScheduleJobHttpService jobHttpService,
-            ISysGlobalExceptionLogService gexService)
+            ISysGlobalExceptionLogService exceptionLogService)
+            : base(jobConfig, authConfig, lockConfig, jobHttpService, exceptionLogService)
         {
-            _config = config;
             _apiRepository = apiRepository;
             _exRepository = exRepository;
             _gexRepository = gexRepository;
             _loginRepository = loginRepository;
             _operaRepository = operaRepository;
-            _jobHttpService = jobHttpService;
-            _gexService = gexService;
         }
 
-        public async Task Execute(IJobExecutionContext context)
+        /// <summary>
+        /// 执行任务
+        /// </summary>
+        protected override async Task ExecuteInternalAsync(IJobExecutionContext context)
         {
-            try
-            {
-                var data = context.JobDetail.JobDataMap.GetString("Data");
-                var config = JsonConvert.DeserializeObject<DeleteSysLogJobData>(data);
-                if (config == null)
-                    return;
+            var data = context.JobDetail.JobDataMap.GetString("Data");
+            var config = JsonConvert.DeserializeObject<DeleteSysLogJobData>(data);
+            if (config == null)
+                return;
 
-                var apis = await _apiRepository.GetListDeletableAsync(DateTime.UtcNow.AddDays(config.ApiLogDays));
-                if (apis.Any())
-                {
-                    var num = await _apiRepository.DeleteRangeAsync(apis);
-                    await AddLogAsync($"删除Api日志（{config.ApiLogDays}天前）任务执行完成，删除{num}条");
-                }
-                var exs = await _exRepository.GetListDeletableAsync(DateTime.UtcNow.AddDays(config.ExceptionLogDays));
-                if (exs.Any())
-                {
-                    var num = await _exRepository.DeleteRangeAsync(exs);
-                    await AddLogAsync($"删除异常日志（{config.ExceptionLogDays}天前）任务执行完成，删除{num}条");
-                }
-                var gexs = await _gexRepository.GetListDeletableAsync(DateTime.UtcNow.AddDays(config.GlobalExceptionLogDays));
-                if (gexs.Any())
-                {
-                    var num = await _gexRepository.DeleteRangeAsync(gexs);
-                    await AddLogAsync($"删除全局异常日志（{config.GlobalExceptionLogDays}天前）任务执行完成，删除{num}条");
-                }
-                var logs = await _loginRepository.GetListDeletableAsync(DateTime.UtcNow.AddDays(config.LoginLogDays));
-                if (logs.Any())
-                {
-                    var num = await _loginRepository.DeleteRangeAsync(logs);
-                    await AddLogAsync($"删除登录日志（{config.LoginLogDays}天前）任务执行完成，删除{num}条");
-                }
-                var operas = await _operaRepository.GetListDeletableAsync(DateTime.UtcNow.AddDays(config.OperationLogDays));
-                if (operas.Any())
-                {
-                    var num = await _operaRepository.DeleteRangeAsync(operas);
-                    await AddLogAsync($"删除操作日志（{config.OperationLogDays}天前）任务执行完成，删除{num}条");
-                }
-                await AddLogAsync($"删除日志任务执行完成");
-            }
-            catch (Exception ex)
+            var apis = await _apiRepository.GetListDeletableAsync(DateTime.UtcNow.AddDays(config.ApiLogDays));
+            if (apis.Any())
             {
-                await _gexService.AddAsync(new SysGlobalExceptionLogForm
-                {
-                    ModuleName = _config.ClientName,
-                    ModuleCode = _config.ClientCode,
-                    Name = ex.Message,
-                    Content = ex.InnerException == null ? ex.StackTrace : ex.InnerException.StackTrace
-                });
+                var num = await _apiRepository.DeleteRangeAsync(apis);
+                await AddLogAsync($"删除Api日志（{config.ApiLogDays}天前）任务执行完成，删除{num}条");
             }
-        }
-
-        // 添加日志
-        private async Task AddLogAsync(string log)
-        {
-            await _jobHttpService.LogAsync(_config.ClientCode, typeof(DeleteSysLogJob).Name, log);
+            var exs = await _exRepository.GetListDeletableAsync(DateTime.UtcNow.AddDays(config.ExceptionLogDays));
+            if (exs.Any())
+            {
+                var num = await _exRepository.DeleteRangeAsync(exs);
+                await AddLogAsync($"删除异常日志（{config.ExceptionLogDays}天前）任务执行完成，删除{num}条");
+            }
+            var gexs = await _gexRepository.GetListDeletableAsync(DateTime.UtcNow.AddDays(config.GlobalExceptionLogDays));
+            if (gexs.Any())
+            {
+                var num = await _gexRepository.DeleteRangeAsync(gexs);
+                await AddLogAsync($"删除全局异常日志（{config.GlobalExceptionLogDays}天前）任务执行完成，删除{num}条");
+            }
+            var logs = await _loginRepository.GetListDeletableAsync(DateTime.UtcNow.AddDays(config.LoginLogDays));
+            if (logs.Any())
+            {
+                var num = await _loginRepository.DeleteRangeAsync(logs);
+                await AddLogAsync($"删除登录日志（{config.LoginLogDays}天前）任务执行完成，删除{num}条");
+            }
+            var operas = await _operaRepository.GetListDeletableAsync(DateTime.UtcNow.AddDays(config.OperationLogDays));
+            if (operas.Any())
+            {
+                var num = await _operaRepository.DeleteRangeAsync(operas);
+                await AddLogAsync($"删除操作日志（{config.OperationLogDays}天前）任务执行完成，删除{num}条");
+            }
+            await AddLogAsync($"删除日志任务执行完成");
         }
 
         /// <summary>
